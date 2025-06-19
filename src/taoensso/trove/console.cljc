@@ -11,15 +11,7 @@
    (let [formatter (.withZone java.time.format.DateTimeFormatter/ISO_INSTANT java.time.ZoneOffset/UTC)]
      (defn- timestamp [] (.format formatter (java.time.Instant/now)))))
 
-#?(:clj
-   (let [newline (System/getProperty "line.separator")]
-     (defn- atomic-println [x]
-       (let [ow *out*
-             sw (java.io.StringWriter.)]
-         (binding [*print-readably* nil] (print-method x sw))
-         (.write  sw newline)
-         (.append ow (.toString sw))
-         (.flush  ow)))))
+#?(:clj (def ^:const ^:private system-newline (System/getProperty "line.separator")))
 
 (defn get-log-fn
   "Returns a simple log-fn that:
@@ -44,7 +36,7 @@
                    (when id (utils/format-id ns id))
                    msg data error]))]
 
-          #?(:clj (atomic-println combo-msg)
+          #?(:clj (do (print (str combo-msg system-newline)) (flush)) ; Atomic println
              :cljs
              (case level
                (:trace :debug) (.debug js/console combo-msg)
