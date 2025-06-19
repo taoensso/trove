@@ -1,5 +1,6 @@
 (ns taoensso.trove
-  "Modern logging facade for Clojure/Script."
+  "A minimal, modern logging facade for Clojure/Script.
+  Supports both traditional and structured logging."
   {:author "Peter Taoussanis (@ptaoussanis)"}
   (:require
    [taoensso.trove.utils   :as utils]
