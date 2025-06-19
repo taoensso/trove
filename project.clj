@@ -1,4 +1,4 @@
-(defproject com.taoensso/trove "1.0.0-SNAPSHOT"
+(defproject com.taoensso/trove "1.0.0-beta1"
   :author "Peter Taoussanis <https://www.taoensso.com>"
   :description "Modern logging facade for Clojure/Script"
   :url "https://www.taoensso.com/trove"
