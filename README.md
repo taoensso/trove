@@ -23,7 +23,7 @@ It works great for **library authors** that want to emit rich logging _without_ 
 
 ## To log
 
-1. Include the (tiny) [dependency](#latest-releases) in your project or library.
+1. Include the (tiny) [dependency](../../releases/) in your project or library.
 2. Use `trove/log!` to make your logging calls (see [docstring](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#log!) for API):
 
 ```clojure
