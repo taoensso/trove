@@ -33,7 +33,7 @@
           (when ns     (.addKeyValue builder ":trove/ns"     (str ns)))
           (when id     (.addKeyValue builder ":trove/id"     (str id)))
           (when coords (.addKeyValue builder ":trove/coords" (str coords)))
-          (when msg    (.setMessage  builder ^String         msg))
+          (when msg    (.setMessage  builder                 (str msg)))
           (when error  (.setCause    builder ^Throwable      error))
 
           #_(when kvs  (reduce-kv (fn [_ k v] (.addKeyValue builder (str k) (str v))) nil kvs))
