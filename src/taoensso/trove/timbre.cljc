@@ -23,4 +23,4 @@
            (into [] (filter some?)
              [(when id (utils/format-id ns id)) msg data])})))))
 
-(comment ((get-log-fn {}) (str *ns*) :info ::id [1 2] {:msg "msg" :data {:k :v}}))
+(comment ((get-log-fn {}) (str *ns*) [1 2] :info ::id {:msg "msg" :data {:k :v}}))
