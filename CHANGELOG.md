@@ -2,6 +2,17 @@ This project uses [**Break Versioning**](https://www.taoensso.com/break-versioni
 
 ---
 
+# `v1.0.0-beta2` (2025-06-20)
+
+- **Dependency**: [on Clojars](https://clojars.org/com.taoensso/trove/versions/1.0.0-beta2)
+- **Versioning**: [Break Versioning](https://www.taoensso.com/break-versioning)
+
+- \[fix] Fix babashka console output \[c6b177e]
+- \[new] Add `:let` support to `log!` \[8bc67af]
+- \[new] Add 0-arity log fn constructors \[971674c]
+- \[doc] Misc docstring improvements
+
+---
 # `v1.0.0-beta1` (2025-06-19)
 
 - **Dependency**: [on Clojars](https://clojars.org/com.taoensso/trove/versions/1.0.0-beta1)

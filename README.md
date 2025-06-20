@@ -1,5 +1,5 @@
 <a href="https://www.taoensso.com/clojure" title="More stuff by @ptaoussanis at www.taoensso.com"><img src="https://www.taoensso.com/open-source.png" alt="Taoensso open source" width="340"/></a>  
-[**API**][cljdoc] | [Slack channel][] | Latest release: [v1.0.0-beta1](../../releases/tag/v1.0.0-beta1) 🚧 (2025-06-19)
+[**API**][cljdoc] | [Slack channel][] | Latest release: [v1.0.0-beta2](../../releases/tag/v1.0.0-beta2) 🚧 (2025-06-20)
 
 [![Clj tests][Clj tests SVG]][Clj tests URL]
 [![Cljs tests][Cljs tests SVG]][Cljs tests URL]
