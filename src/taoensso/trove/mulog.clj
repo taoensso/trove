@@ -22,7 +22,7 @@
             :coords    coords
             :msg       msg
             :exception error
-            :data      data
-            :kvs       kvs}))))))
+            :data      (not-empty data)
+            :kvs       (not-empty kvs)}))))))
 
 (comment ((get-log-fn) (str *ns*) [1 2] :info ::id {:msg "msg" :data {:k :v}}))

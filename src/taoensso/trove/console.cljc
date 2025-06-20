@@ -35,7 +35,7 @@
                  (into [] (filter some?)
                    [(timestamp) level ns coords
                     (when id (utils/format-id ns id))
-                    msg data error]))]
+                    msg (not-empty data) error]))]
 
            #?(:clj (do (print (str combo-msg system-newline)) (flush)) ; Atomic println
               :cljs
