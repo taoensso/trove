@@ -68,30 +68,34 @@
      Advanced options:
        `:ns` ----- Custom namespace string to override default
        `:coords` - Custom [line column]    to override default
+       `:let` ---- Bindings shared by lazy args: {:keys [msg data error kvs]}
        <kvs> ----- Any other kvs will also be provided to `log-fn`, handy for
                    custom `log-fn` opts, etc.
 
      Traditional logs typically include at least {:keys [level msg ...]}.
      Structured  logs typically include at least {:keys [level id data ...]}."
 
-     [{:keys [ns coords level id msg data error] :as opts ; forms
-       :or
-       {ns     (str *ns*)
-        level  :info
-        coords (utils/callsite-coords &form)}}]
+     {:arglists '([{:keys [level id msg data error]}])} ; Common only
+     [opts]
 
      (when-not (map? opts)
        (throw
          (ex-info "Trove opts must be a compile-time map"
            {:opts {:value opts, :type (type opts)}})))
 
-     (let [lfn (gensym "lfn__")
-           kvs (not-empty (dissoc opts :ns :coords :level :id :error :msg :data))
+     (let [{:keys [ns coords level id msg data error] letf :let ; forms
+            :or
+            {ns     (str *ns*)
+             level  :info
+             coords (utils/callsite-coords &form)}} opts
+
+           lfn (gensym "lfn__")
+           kvs (not-empty (dissoc opts :ns :coords :level :id :error :let :msg :data))
            lazy-form
            (when-let [opts (utils/assoc-some nil {:error error, :msg msg, :data data, :kvs kvs})]
-             (if (every? utils/const? opts)
-               (do      opts) ; Don't pay for wrapping
-               `(delay ~opts)))]
+             (if (every? utils/const? [opts letf])
+               (if letf        `(let ~letf ~opts)           opts) ; Don't pay for wrapping
+               (if letf `(delay (let ~letf ~opts)) `(delay ~opts))))]
 
        `(let   [~lfn *log-fn*]
           (when ~lfn

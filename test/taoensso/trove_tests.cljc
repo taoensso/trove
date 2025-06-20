@@ -34,9 +34,28 @@
    (is (= (with-backend (trove/log! {:ns "ns", :coords [12 34], :data {:k1 :v1}, :k2 :v2}))
          ["ns" [12 34] :info nil {:data {:k1 :v1}, :kvs {:k2 :v2}}]))
 
-   (let [lazy_ (get (with-backend (trove/log! {:msg (str "a" "b" "c")})) 4)]
-     [(is    (delay? lazy_))
-      (is (= (force  lazy_) {:msg "abc"}))])])
+   (testing "Auto delay wrapping"
+     [(let [lazy_ (get (with-backend (trove/log! {:msg "abc"})) 4)]
+        [(is (not (delay? lazy_)))
+         (is (=   (force  lazy_) {:msg "abc"}))])
+
+      (let [lazy_ (get (with-backend (trove/log! {:msg (str "a" "b" "c")})) 4)]
+        [(is      (delay? lazy_))
+         (is (=   (force  lazy_) {:msg "abc"}))])])
+
+   (testing ":let option"
+     (let [lazy_
+           (get
+             (with-backend
+               (trove/log!
+                 {:let  [user-id 1234],
+                  :data {:user-id     user-id}
+                  :msg  (str "User: " user-id)
+                  :kv1              #{user-id}}))
+             4)]
+
+       [(is    (delay? lazy_))
+        (is (= (force  lazy_) {:msg "User: 1234", :data {:user-id 1234}, :kvs {:kv1 #{1234}}}))]))])
 
 ;;;; Backends
 
