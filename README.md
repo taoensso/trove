@@ -47,7 +47,7 @@ And the chosen backend then takes care of filtering and output.
 Just set `trove/*log-fn*` to an appropriate fn (see its [docstring](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#*log-fn*) for fn args).
 
 The default fn prints logs to `*out*` or the JS console.  
-Alts are also available for some common backends, e.g.:
+Alt fns are also available for some common backends, e.g.:
 
 ```clojure
 (ns my-ns
@@ -56,7 +56,7 @@ Alts are also available for some common backends, e.g.:
    [taoensso.trove :as trove]))
 
 (trove/set-log-fn! (taoensso.trove.x/get-log-fn))
-(trove/set-log-fn! nil) ; To noop all `log!` calls
+(trove/set-log-fn! nil) ; To noop all `trove/log!` calls
 ```
 
 It's easy to write your own log-fn if you want to use a different backend or customise anything.

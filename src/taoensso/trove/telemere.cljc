@@ -14,14 +14,14 @@
        (let [{:keys [msg data error kvs]} (force lazy_)]
          (tel/signal!
            {:allow? true
-            :kind   :trove
             :ns     ns
-            :level  level
-            :id     id
             :coords coords
+            :kind   :trove
+            :id     id
+            :level  level
+            :data   data
             :msg    msg
             :error  error
-            :data   data
             :kvs+   kvs}))))))
 
 (comment ((get-log-fn) (str *ns*) [1 2] :info ::id {:msg "msg" :data {:k :v}}))

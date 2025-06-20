@@ -66,9 +66,9 @@
        `:error` -- Optional platform error (`java.lang.Throwable`, `js/Error`)
 
      Advanced options:
+       `:let` ---- Bindings shared by lazy args: {:keys [msg data error kvs]}
        `:ns` ----- Custom namespace string to override default
        `:coords` - Custom [line column]    to override default
-       `:let` ---- Bindings shared by lazy args: {:keys [msg data error kvs]}
        <kvs> ----- Any other kvs will also be provided to `log-fn`, handy for
                    custom `log-fn` opts, etc.
 
