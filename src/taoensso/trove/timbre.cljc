@@ -22,6 +22,7 @@
             :?err     error
             :vargs
             (into [] (filter some?)
-              [(when id (utils/format-id ns id)) msg data])}))))))
+              [(when id (utils/format-id ns id))
+               msg (not-empty data)])}))))))
 
 (comment ((get-log-fn) (str *ns*) [1 2] :info ::id {:msg "msg" :data {:k :v}}))
