@@ -22,26 +22,27 @@
     `:min-level` - ∈ #{nil :trace :debug :info :warn :error :fatal :report},
                    log calls with a lower level will noop."
 
-  [{:keys [min-level]
-    :or   {min-level #?(:clj :info, :cljs nil)}}]
+  ([] (get-log-fn nil))
+  ([{:keys [min-level]
+     :or   {min-level #?(:clj :info, :cljs nil)}}]
 
-  (fn log-fn [ns coords level id lazy_]
-    (when #?(:clj true :cljs (exists? js/console))
-      (when (or (not min-level) (>= (level->int level) (level->int min-level)))
-        (let [{:keys [msg data error #_kvs]} (force lazy_)
-              combo-msg
-              (str/join " "
-                (into [] (filter some?)
-                  [(timestamp) level ns coords
-                   (when id (utils/format-id ns id))
-                   msg data error]))]
+   (fn log-fn:console [ns coords level id lazy_]
+     (when #?(:clj true :cljs (exists? js/console))
+       (when (or (not min-level) (>= (level->int level) (level->int min-level)))
+         (let [{:keys [msg data error #_kvs]} (force lazy_)
+               combo-msg
+               (str/join " "
+                 (into [] (filter some?)
+                   [(timestamp) level ns coords
+                    (when id (utils/format-id ns id))
+                    msg data error]))]
 
-          #?(:clj (do (print (str combo-msg system-newline)) (flush)) ; Atomic println
-             :cljs
-             (case level
-               (:trace :debug) (.debug js/console combo-msg)
-               (:info :report) (.info  js/console combo-msg)
-               (:warn)         (.warn  js/console combo-msg)
-               (:error :fatal) (.error js/console combo-msg))))))))
+           #?(:clj (do (print (str combo-msg system-newline)) (flush)) ; Atomic println
+              :cljs
+              (case level
+                (:trace :debug) (.debug js/console combo-msg)
+                (:info :report) (.info  js/console combo-msg)
+                (:warn)         (.warn  js/console combo-msg)
+                (:error :fatal) (.error js/console combo-msg)))))))))
 
-(comment ((get-log-fn {}) (str *ns*) [1 2] :info ::id {:msg "msg" :data {:k :v}}))
+(comment ((get-log-fn) (str *ns*) [1 2] :info ::id {:msg "msg" :data {:k :v}}))

@@ -43,7 +43,7 @@
     Basic fns are provided for some common backends, see `taoensso.trove.x/get-log-fn`
     with x ∈ #{console telemere timbre mulog tools-logging slf4j} (default console)."
 
-  (console/get-log-fn {}))
+  (console/get-log-fn))
 
 #?(:clj
    (defmacro set-log-fn!

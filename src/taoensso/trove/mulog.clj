@@ -9,19 +9,20 @@
   "Returns a simple log-fn that logs with μ/log.
   Filtering and output will be handled by μ/log.
   Currently no options."
-  [{:as opts}]
-  (fn log-fn [ns coords level id lazy_]
-    ;; Mulog offers no way to filter here?
-    (let [{:keys [msg data error kvs]} (force lazy_)]
-      (ml/log* ml/*default-logger*
-        (or id :trove/default)
-        (utils/assoc-some nil
-          {:ns        ns
-           :level     level
-           :coords    coords
-           :msg       msg
-           :exception error
-           :data      data
-           :kvs       kvs})))))
+  ([] (get-log-fn nil))
+  ([{:as _opts}]
+   (fn log-fn:mulog [ns coords level id lazy_]
+     ;; Mulog offers no way to filter here?
+     (let [{:keys [msg data error kvs]} (force lazy_)]
+       (ml/log* ml/*default-logger*
+         (or id :trove/default)
+         (utils/assoc-some nil
+           {:ns        ns
+            :level     level
+            :coords    coords
+            :msg       msg
+            :exception error
+            :data      data
+            :kvs       kvs}))))))
 
-(comment ((get-log-fn {}) (str *ns*) [1 2] :info ::id {:msg "msg" :data {:k :v}}))
+(comment ((get-log-fn) (str *ns*) [1 2] :info ::id {:msg "msg" :data {:k :v}}))

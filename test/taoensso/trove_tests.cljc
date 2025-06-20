@@ -45,12 +45,12 @@
     (defn- log1! [] (trove/log! {:id ::my-d, :msg "msg", :data {:k1 :v1}, :k2 :v2}))
     (com.brunobonacci.mulog/start-publisher! {:type :console})
 
-    (with-out-str (binding [trove/*log-fn* (taoensso.trove.console/get-log-fn       {})] (log1!)))
-    (with-out-str (binding [trove/*log-fn* (taoensso.trove.telemere/get-log-fn      {})] (log1!)))
-    (with-out-str (binding [trove/*log-fn* (taoensso.trove.timbre/get-log-fn        {})] (log1!)))
-    (do           (binding [trove/*log-fn* (taoensso.trove.mulog/get-log-fn         {})] (log1!)))
-    (do           (binding [trove/*log-fn* (taoensso.trove.tools-logging/get-log-fn {})] (log1!)))
-    (do           (binding [trove/*log-fn* (taoensso.trove.slf4j/get-log-fn         {})] (log1!)))))
+    (with-out-str (binding [trove/*log-fn* (taoensso.trove.console/get-log-fn)]       (log1!)))
+    (with-out-str (binding [trove/*log-fn* (taoensso.trove.telemere/get-log-fn)]      (log1!)))
+    (with-out-str (binding [trove/*log-fn* (taoensso.trove.timbre/get-log-fn)]        (log1!)))
+    (do           (binding [trove/*log-fn* (taoensso.trove.mulog/get-log-fn)]         (log1!)))
+    (do           (binding [trove/*log-fn* (taoensso.trove.tools-logging/get-log-fn)] (log1!)))
+    (do           (binding [trove/*log-fn* (taoensso.trove.slf4j/get-log-fn)]         (log1!)))))
 
 ;;;;
 
