@@ -17,14 +17,14 @@ Trove is a minimal, modern alternative to [tools.logging](https://github.com/clo
 
 It's TINY (1 macro, 0 deps, ~100 loc), fast, and highly flexible.
 
-It supports any backend including: [Telemere](https://www.taoensso.com/telemere), [Timbre](https://www.taoensso.com/timbre), [μ/log](https://github.com/BrunoBonacci/mulog), [tools.logging](https://github.com/clojure/tools.logging), [SLF4J](https://www.slf4j.org/), a custom fn, etc.
+It supports any backend including: [Telemere](https://www.taoensso.com/telemere), [Timbre](https://www.taoensso.com/timbre), [μ/log](https://github.com/BrunoBonacci/mulog), [tools.logging](https://github.com/clojure/tools.logging), [SLF4J](https://www.slf4j.org/), etc.
 
 It works great for **library authors** that want to emit rich logging _without_ forcing their users to adopt any particular backend.
 
 ## To log
 
 1. Include the (tiny) [dependency](../../releases/) in your project or library.
-2. Use `trove/log!` to make your logging calls (see [docstring](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#log!) for API):
+2. Use `trove/log!` to make your logging calls (see its [docstring](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#log!) for options):
 
 ```clojure
 (ns my-ns (:require [taoensso.trove :as trove]))
@@ -44,25 +44,19 @@ And the chosen backend then takes care of filtering and output.
 
 ## To choose a backend
 
-Just modify `trove/*log-fn*` (see [docstring](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#*log-fn*) for API).
+Just set `trove/*log-fn*` to an appropriate fn (see its [docstring](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#*log-fn*) for fn args).
 
-The default log-fn prints logs to `*out*` or the JS console. Alternatives are provided for some common backends:
+The default fn prints logs to `*out*` or the JS console.  
+Alts are also available for some common backends, e.g.:
 
 ```clojure
 (ns my-ns
   (:require
-   [taoensso.trove :as trove]
+   [taoensso.trove.x] ; x ∈ #{console telemere timbre mulog tools-logging slf4j} (default console)
+   [taoensso.trove :as trove]))
 
-   ;; Choose (uncomment) one:
-   ;; [taoensso.trove.console       :as trove-backend] ; default
-   ;; [taoensso.trove.telemere      :as trove-backend]
-   ;; [taoensso.trove.timbre        :as trove-backend]
-   ;; [taoensso.trove.mulog         :as trove-backend]
-   ;; [taoensso.trove.tools-logging :as trove-backend]
-   ;; [taoensso.trove.slf4j         :as trove-backend]
-   ))
-
-(trove/set-log-fn! (trove-backend/get-log-fn {}))
+(trove/set-log-fn! (taoensso.trove.x/get-log-fn))
+(trove/set-log-fn! nil) ; To noop all `log!` calls
 ```
 
 It's easy to write your own log-fn if you want to use a different backend or customise anything.

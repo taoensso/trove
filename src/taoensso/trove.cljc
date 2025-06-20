@@ -13,43 +13,41 @@
   i.e. what happens on `trove/log!` calls.
 
   When `nil`, all `trove/log!` calls will noop.
-  Otherwise value should be a fn of 5 args, (fn [ns coords level id lazy_]):
+  Otherwise value should be a (fn [ns coords level id lazy_]) with:
 
     `ns` ------- String namespace  of   `log!` callsite, e.g. \"my-app.utils\"
     `coords` --- ?[line column]    of   `log!` callsite, may be lost (nil) for macros wrapping `log!`
+
     `level` ----  Keyword `:level` from `log!` call ∈ #{:trace :debug :info :warn :error :fatal :report}
     `id` ------- ?Keyword `:id`    from `log!` call, e.g. `:auth/login`, `::order-complete`, etc.
+
     `lazy_` ---- {:keys [msg data error kvs]}, MAY be wrapped with `delay` so access with `force`:
       `:msg` --- ?String `:msg`        from `log!` call
       `:data` -- ?Map    `:data`       from `log!` call, e.g. {:user-id 1234}
       `:error` - ?Error  `:error`      from `log!` call, (`java.lang.Throwable`, `js/Error`, or nil)
       `:kvs` --- ?Map of any other kvs from `log!` call, handy for custom `log-fn` opts, etc.
 
-  Change dynamic value with `binding`.
-  Change root    value with `set-log-fn!`.
-
   The configured `log-fn` may filter (conditionally noop), or produce the
   relevant logging side effects (printing, etc.).
 
-  NB: `log-fn` is called SYNCHRONOUSLY so:
-    - Has access to the calling thread (can be handy).
-    - Should implement appropriate async/threading/backpressure
-      for expensive work.
+  The configured `log-fn` will be called SYNCHRONOUSLY so:
+    - It has access to the `trove/log!` calling thread/context (can be handy).
+    - It should implement appropriate async/threading/backpressure for
+      expensive work.
 
-  Some common backends are included out-the-box:
-    console ------- `taoensso.trove.console/get-log-fn` (default)
-    Telemere ------ `taoensso.trove.telemere/get-log-fn`
-    Timbre -------- `taoensso.trove.timbre/get-log-fn`
-    μ/log --------- `taoensso.trove.mulog/get-log-fn`
-    tools.logging - `taoensso.trove.tools-logging/get-log-fn`
-    SLF4J --------- `taoensso.trove.slf4j/get-log-fn`"
+  Config:
+
+    Change dynamic value with `binding`.
+    Change root    value with `set-log-fn!`.
+
+    Basic fns are provided for some common backends, see `taoensso.trove.x/get-log-fn`
+    with x ∈ #{console telemere timbre mulog tools-logging slf4j} (default console)."
 
   (console/get-log-fn {}))
 
 #?(:clj
    (defmacro set-log-fn!
-     "Sets the root value of `*log-fn*`.
-     See `*log-fn*` for more info."
+     "Sets the root value of `*log-fn*` (see its docstring for more info)."
      [f]
      (if (:ns &env)
        `(set!                *log-fn*           ~f)
