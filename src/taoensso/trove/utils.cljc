@@ -1,6 +1,8 @@
 (ns taoensso.trove.utils
   "Misc utils, subject to change.")
 
+#?(:clj (def ^:no-doc ^:const nl "System line separator" (System/getProperty "line.separator")))
+
 #?(:clj
    (let [cons? (fn [x] (instance? clojure.lang.Cons x))]
      (defn ^:no-doc const? [x]
