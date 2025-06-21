@@ -11,8 +11,6 @@
    (let [formatter (.withZone java.time.format.DateTimeFormatter/ISO_INSTANT java.time.ZoneOffset/UTC)]
      (defn- timestamp [] (.format formatter (java.time.Instant/now)))))
 
-#?(:clj (def ^:const ^:private system-newline (System/getProperty "line.separator")))
-
 (defn get-log-fn
   "Returns a simple log-fn that:
     - Clj:  logs to `*out*` using `println`.
@@ -34,10 +32,11 @@
                (str/join " "
                  (into [] (filter some?)
                    [(timestamp) level ns coords
-                    (when id (utils/format-id ns id))
-                    msg (not-empty data) error]))]
+                    (when id (utils/format-id ns id)) msg
+                    (when-not (empty? data) (str utils/nl "  data: " data))
+                    (when            error  (str utils/nl " error: " error))]))]
 
-           #?(:clj (do (print (str combo-msg system-newline)) (flush)) ; Atomic println
+           #?(:clj (do (print (str combo-msg utils/nl)) (flush)) ; Atomic println
               :cljs
               (case level
                 (:trace :debug) (.debug js/console combo-msg)
@@ -45,4 +44,4 @@
                 (:warn)         (.warn  js/console combo-msg)
                 (:error :fatal) (.error js/console combo-msg)))))))))
 
-(comment ((get-log-fn) (str *ns*) [1 2] :info ::id {:msg "msg" :data {:k :v}}))
+(comment ((get-log-fn) (str *ns*) [1 2] :info ::id {:msg "line1\nline2" :data {:k :v}}))

@@ -41,4 +41,4 @@
            (when data   (reduce-kv (fn [_ k v] (.addKeyValue builder (str k) (str v))) nil data))
            (do                                 (.log         builder))))))))
 
-(comment ((get-log-fn) (str *ns*) [1 2] :info ::id {:msg "msg" :data {:k :v}}))
+(comment ((get-log-fn) (str *ns*) [1 2] :info ::id {:msg "line1\nline2" :data {:k :v}}))

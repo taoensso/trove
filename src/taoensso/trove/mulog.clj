@@ -25,4 +25,4 @@
             :data      (not-empty data)
             :kvs       (not-empty kvs)}))))))
 
-(comment ((get-log-fn) (str *ns*) [1 2] :info ::id {:msg "msg" :data {:k :v}}))
+(comment ((get-log-fn) (str *ns*) [1 2] :info ::id {:msg "line1\nline2" :data {:k :v}}))
