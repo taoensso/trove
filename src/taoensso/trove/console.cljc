@@ -39,9 +39,12 @@
            #?(:clj (do (print (str combo-msg utils/nl)) (flush)) ; Atomic println
               :cljs
               (case level
-                (:trace :debug) (.debug js/console combo-msg)
-                (:info :report) (.info  js/console combo-msg)
-                (:warn)         (.warn  js/console combo-msg)
-                (:error :fatal) (.error js/console combo-msg)))))))))
+                :trace  (.trace js/console combo-msg)
+                :debug  (.debug js/console combo-msg)
+                :info   (.info  js/console combo-msg)
+                :warn   (.warn  js/console combo-msg)
+                :error  (.error js/console combo-msg)
+                :fatal  (.error js/console combo-msg)
+                :report (.info  js/console combo-msg)))))))))
 
 (comment ((get-log-fn) (str *ns*) [1 2] :info ::id {:msg "line1\nline2" :data {:k :v}}))
