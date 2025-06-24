@@ -3,14 +3,10 @@
    [clojure.test   :as test :refer [deftest testing is]]
    [taoensso.trove :as trove]
    [taoensso.trove.console]
-   [taoensso.trove.telemere]
    [taoensso.trove.timbre]
    #?@
    (:clj
-    [[taoensso.trove.mulog]
-     [taoensso.trove.tools-logging]
-     [taoensso.trove.slf4j]
-     [com.brunobonacci.mulog]]))
+    [[taoensso.trove.tools-logging]]))
 
   #?(:cljs
      (:require-macros
@@ -29,8 +25,8 @@
         @args_#)))
 
 (deftest basics
-  [(is (= (with-backend (trove/log! {}))         ["taoensso.trove-tests" [32 25] :info nil                      nil]))
-   (is (= (with-backend (trove/log! {:id ::id})) ["taoensso.trove-tests" [33 25] :info :taoensso.trove-tests/id nil]))
+  [(is (= (with-backend (trove/log! {}))         ["taoensso.trove-tests" [28 25] :info nil                      nil]))
+   (is (= (with-backend (trove/log! {:id ::id})) ["taoensso.trove-tests" [29 25] :info :taoensso.trove-tests/id nil]))
    (is (= (with-backend (trove/log! {:ns "ns", :coords [12 34], :data {:k1 :v1}, :k2 :v2}))
          ["ns" [12 34] :info nil {:data {:k1 :v1}, :kvs {:k2 :v2}}]))
 
@@ -61,6 +57,10 @@
 
 (comment
   (do
+    (require '[taoensso.trove.telemere])
+    #?(:clj (require '[taoensso.trove.mulog]
+                     '[taoensso.trove.slf4j]
+                     '[com.brunobonacci.mulog]))
     (defn- log1! [] (trove/log! {:id ::my-d, :msg "msg", :data {:k1 :v1}, :k2 :v2}))
     (com.brunobonacci.mulog/start-publisher! {:type :console})
 
