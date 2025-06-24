@@ -4,6 +4,7 @@
 [![Clj tests][Clj tests SVG]][Clj tests URL]
 [![Cljs tests][Cljs tests SVG]][Cljs tests URL]
 [![Graal tests][Graal tests SVG]][Graal tests URL]
+[![bb tests][bb tests SVG]][bb tests URL]
 
 # Trove
 
@@ -100,9 +101,11 @@ Licensed under [EPL 1.0](LICENSE.txt) (same as Clojure).
 [Clojars SVG]: https://img.shields.io/clojars/v/com.taoensso/trove.svg
 [Clojars URL]: https://clojars.org/com.taoensso/trove
 
-[Clj tests SVG]:  https://github.com/taoensso/trove/actions/workflows/clj-tests.yml/badge.svg
-[Clj tests URL]:  https://github.com/taoensso/trove/actions/workflows/clj-tests.yml
+[Clj tests SVG]:   https://github.com/taoensso/trove/actions/workflows/clj-tests.yml/badge.svg
+[Clj tests URL]:   https://github.com/taoensso/trove/actions/workflows/clj-tests.yml
 [Cljs tests SVG]:  https://github.com/taoensso/trove/actions/workflows/cljs-tests.yml/badge.svg
 [Cljs tests URL]:  https://github.com/taoensso/trove/actions/workflows/cljs-tests.yml
 [Graal tests SVG]: https://github.com/taoensso/trove/actions/workflows/graal-tests.yml/badge.svg
 [Graal tests URL]: https://github.com/taoensso/trove/actions/workflows/graal-tests.yml
+[bb tests SVG]:    https://github.com/taoensso/trove/actions/workflows/bb-tests.yml/badge.svg
+[bb tests URL]:    https://github.com/taoensso/trove/actions/workflows/bb-tests.yml

@@ -1,8 +1,20 @@
 {:paths ["bb"]
  :tasks
- {:requires ([graal-tests])
+ {test:bb-trove
+  {:doc "Run standard Trove tests with babashka"
+   :extra-paths ["src" "test"]
+   :extra-deps {io.github.cognitect-labs/test-runner {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+   :task (exec 'cognitect.test-runner.api/test)
+   :exec-args {:patterns [".*-tests$"]}}
+
+  test:bb
+  {:doc "Run babashka-specific tests"
+   :extra-paths ["src" "test"]
+   :task (load-file "test/taoensso/bb_tests.bb")}
+
   graal-tests
   {:doc "Run Graal native-image tests"
+   :requires ([graal-tests])
    :task
    (do
      (graal-tests/uberjar)

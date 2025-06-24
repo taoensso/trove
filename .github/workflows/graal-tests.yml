@@ -31,6 +31,3 @@ jobs:
 
       - name: Run Graal tests
         run: bb graal-tests
-
-#     - name: Run Babashka tests
-#       run: bb bb-tests
