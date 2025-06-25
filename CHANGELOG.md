@@ -2,6 +2,18 @@ This project uses [**Break Versioning**](https://www.taoensso.com/break-versioni
 
 ---
 
+# `v1.0.0-RC1` (2025-06-25)
+
+- **Dependency**: [on Clojars](https://clojars.org/com.taoensso/trove/versions/1.0.0-RC1)
+- **Versioning**: [Break Versioning](https://www.taoensso.com/break-versioning)
+
+- \[new] [#2] More thorough bb testing (@borkdude) \[506477b]
+- \[new] Support js/console.trace for trace level output \[50111f7]
+- \[new] Improve multi-line support in default output \[682903a]
+- \[mod] Drop empty data from default output \[a1446c1]
+
+---
+
 # `v1.0.0-beta2` (2025-06-20)
 
 - **Dependency**: [on Clojars](https://clojars.org/com.taoensso/trove/versions/1.0.0-beta2)
