@@ -6,7 +6,7 @@
 
 (defn- level->int ^long [x] (case x :trace 10, :debug 20, :info 50, :warn 60, :error 70, :fatal 80, :report 90, -1))
 
-#?(:cljs (defn- timestamp [] (.toISOString (java.util.Date.)))
+#?(:cljs (defn- timestamp [] (.toISOString (js/Date.)))
    :clj
    (let [formatter (.withZone java.time.format.DateTimeFormatter/ISO_INSTANT java.time.ZoneOffset/UTC)]
      (defn- timestamp [] (.format formatter (java.time.Instant/now)))))
