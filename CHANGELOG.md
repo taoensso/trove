@@ -2,6 +2,15 @@ This project uses [**Break Versioning**](https://www.taoensso.com/break-versioni
 
 ---
 
+# `v1.0.0-RC2` (2025-07-03)
+
+- **Dependency**: [on Clojars](https://clojars.org/com.taoensso/trove/versions/1.0.0-RC2)
+- **Versioning**: [Break Versioning](https://www.taoensso.com/break-versioning)
+
+- \[fix] Hotfix for broken Cljs console log-fn \[9d0dc55]
+
+---
+
 # `v1.0.0-RC1` (2025-06-25)
 
 - **Dependency**: [on Clojars](https://clojars.org/com.taoensso/trove/versions/1.0.0-RC1)
