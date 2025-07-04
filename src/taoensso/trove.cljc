@@ -4,7 +4,9 @@
   {:author "Peter Taoussanis (@ptaoussanis)"}
   (:require
    [taoensso.trove.utils   :as utils]
-   [taoensso.trove.console :as console]))
+   [taoensso.trove.console :as console])
+
+  #?(:cljs (:require-macros [taoensso.trove])))
 
 ;;;; Main API
 
