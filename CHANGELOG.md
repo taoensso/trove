@@ -2,6 +2,22 @@ This project uses [**Break Versioning**](https://www.taoensso.com/break-versioni
 
 ---
 
+# `v1.0.0` (2025-08-21)
+
+- **Dependency**: [on Clojars](https://clojars.org/com.taoensso/trove/versions/1.0.0)
+- **Versioning**: [Break Versioning](https://www.taoensso.com/break-versioning)
+
+This is the official **v1 stable release** of Trove 🍾🥳  
+
+If no unexpected issues come up, Trove should basically be "done" at this point. \- [Peter Taoussanis](https://www.taoensso.com)
+
+##  Since v1.0.0-RC2 (2025-07-03)
+
+- \[fix] `:trace` level JS console logging \[6816439]
+- \[fix] [#3] Require own macros to support `:refer` from Cljs (@jxonas) \[94c6f84]
+
+---
+
 # `v1.0.0-RC2` (2025-07-03)
 
 - **Dependency**: [on Clojars](https://clojars.org/com.taoensso/trove/versions/1.0.0-RC2)
