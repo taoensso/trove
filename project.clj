@@ -36,13 +36,13 @@
 
     :dependencies
     [[org.clojure/test.check    "1.1.1"]
-     [com.taoensso/encore       "3.148.0"]
+     [com.taoensso/encore       "3.153.1"]
      [com.taoensso/telemere     "1.0.1"]
-     [com.taoensso/timbre       "6.7.1"]
+     [com.taoensso/timbre       "6.8.0"]
      [com.brunobonacci/mulog    "0.9.0"]
      [org.clojure/tools.logging "1.3.0"]
      [org.slf4j/slf4j-api       "2.0.17"]
-     [org.slf4j/slf4j-simple    "2.0.16"]]
+     [org.slf4j/slf4j-simple    "2.0.17"]]
 
     :plugins
     [[lein-pprint    "1.3.2"]
