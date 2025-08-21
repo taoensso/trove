@@ -39,7 +39,7 @@
            #?(:clj (do (print (str combo-msg utils/nl)) (flush)) ; Atomic println
               :cljs
               (case level
-                :trace  (.trace js/console combo-msg)
+                :trace  (.debug js/console combo-msg)
                 :debug  (.debug js/console combo-msg)
                 :info   (.info  js/console combo-msg)
                 :warn   (.warn  js/console combo-msg)
