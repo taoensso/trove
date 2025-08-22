@@ -10,7 +10,11 @@
 
 ### Modern logging facade for Clojure/Script
 
-Trove is a minimal, modern alternative to [tools.logging](https://github.com/clojure/tools.logging) that supports:
+Trove is a minimal, modern alternative to [tools.logging](https://github.com/clojure/tools.logging).
+
+It's intended for **library authors** that want to emit rich logging _without_ forcing their users to adopt any particular backend (e.g. [Telemere](https://www.taoensso.com/telemere), [Timbre](https://www.taoensso.com/timbre), [μ/log](https://github.com/BrunoBonacci/mulog), [tools.logging](https://github.com/clojure/tools.logging), [SLF4J](https://www.slf4j.org/), etc.).
+
+It supports:
 
 - Both traditional **and structured** logging
 - Both Clojure **and ClojureScript**
@@ -18,11 +22,9 @@ Trove is a minimal, modern alternative to [tools.logging](https://github.com/clo
 
 It's TINY (1 macro, 0 deps, ~100 loc), fast, and highly flexible.
 
-It supports any backend including: [Telemere](https://www.taoensso.com/telemere), [Timbre](https://www.taoensso.com/timbre), [μ/log](https://github.com/BrunoBonacci/mulog), [tools.logging](https://github.com/clojure/tools.logging), [SLF4J](https://www.slf4j.org/), etc.
-
-It works great for **library authors** that want to emit rich logging _without_ forcing their users to adopt any particular backend.
-
 ## To log
+
+Trove uses the same map-based logging API as [Telemere](https://www.taoensso.com/telemere).
 
 1. Include the (tiny) [dependency](../../releases/) in your project or library.
 2. Use `trove/log!` to make your logging calls (see its [docstring](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#log!) for options):
@@ -73,6 +75,15 @@ Structured logging sometimes involves expensive data collection or transformatio
 That's why Trove automatically delays any values that need runtime evaluation, allowing the backend to apply filtering *before* paying realization costs.
 
 This explains the `:lazy_` `{:keys [msg data error kvs]}` arg given to [`truss/*log-fn*`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#*log-fn*).
+
+## Why structured logging?
+
+- Traditional logging outputs **strings** (messages).
+- Structured logging in contrast outputs **data**. It retains **rich data types and (nested) structures** throughout the logging pipeline from logging callsite → filters → middleware → handlers.
+
+A data-oriented pipeline can make a huge difference - supporting **easier filtering**, **transformation**, and **analysis**. It’s also usually **faster**, since you only pay for serialization if/when you need it. In a lot of cases you can avoid serialization altogether if your final target (DB, etc.) supports the relevant types.
+
+The structured (data-oriented) approach is inherently more flexible, faster, and well suited to the tools and idioms offered by Clojure and ClojureScript.
 
 ## Funding
 
