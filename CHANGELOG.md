@@ -2,6 +2,19 @@ This project uses [**Break Versioning**](https://www.taoensso.com/break-versioni
 
 ---
 
+# `v1.0.1` (2025-10-11)
+
+- **Dependency**: [on Clojars](https://clojars.org/com.taoensso/trove/versions/1.1.0)
+- **Versioning**: [Break Versioning](https://www.taoensso.com/break-versioning)
+
+This is a minor feature release.
+
+##  Since v1.0.0 (2025-08-21)
+
+- \[new] Added `:log-fn` option to `log!` (handy for testing) \[deb6375]
+
+---
+
 # `v1.0.0` (2025-08-21)
 
 - **Dependency**: [on Clojars](https://clojars.org/com.taoensso/trove/versions/1.0.0)
