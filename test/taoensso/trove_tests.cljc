@@ -18,15 +18,16 @@
 
 ;;;; Basics
 
+(defn capturing-log-fn [] (let [args_ (atom nil)] [args_ (fn [& args] (reset! args_ (vec args)))]))
 #?(:clj
    (defmacro with-backend [& body]
-     `(let [args_# (atom nil)]
-        (binding [trove/*log-fn* (fn [& args#] (reset! args_# (vec args#)))] ~@body)
-        @args_#)))
+     `(let [[args_# lfn#] (capturing-log-fn)]
+        (binding [trove/*log-fn* lfn#]
+          ~@body @args_#))))
 
 (deftest basics
-  [(is (= (with-backend (trove/log! {}))         ["taoensso.trove-tests" [28 25] :info nil                      nil]))
-   (is (= (with-backend (trove/log! {:id ::id})) ["taoensso.trove-tests" [29 25] :info :taoensso.trove-tests/id nil]))
+  [(is (= (with-backend (trove/log! {}))         ["taoensso.trove-tests" [29 25] :info nil                      nil]))
+   (is (= (with-backend (trove/log! {:id ::id})) ["taoensso.trove-tests" [30 25] :info :taoensso.trove-tests/id nil]))
    (is (= (with-backend (trove/log! {:ns "ns", :coords [12 34], :data {:k1 :v1}, :k2 :v2}))
          ["ns" [12 34] :info nil {:data {:k1 :v1}, :kvs {:k2 :v2}}]))
 
@@ -51,7 +52,12 @@
              4)]
 
        [(is    (delay? lazy_))
-        (is (= (force  lazy_) {:msg "User: 1234", :data {:user-id 1234}, :kvs {:kv1 #{1234}}}))]))])
+        (is (= (force  lazy_) {:msg "User: 1234", :data {:user-id 1234}, :kvs {:kv1 #{1234}}}))]))
+
+   (testing ":log-fn option"
+     (=
+       (get (let [[args_ lfn] (capturing-log-fn)] (trove/log! {:msg "Hello!" :log-fn lfn}) @args_) 4)
+       {:msg "Hello!"}))])
 
 ;;;; Backends
 

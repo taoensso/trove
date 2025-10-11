@@ -71,6 +71,7 @@
        `:let` ---- Bindings shared by lazy args: {:keys [msg data error kvs]}
        `:ns` ----- Custom namespace string to override default
        `:coords` - Custom [line column]    to override default
+       `:log-fn` - Custom `log-fn`         to override default (`*log-fn*`)
        <kvs> ----- Any other kvs will also be provided to `log-fn`, handy for
                    custom `log-fn` opts, etc.
 
@@ -85,21 +86,22 @@
          (ex-info "Trove opts must be a compile-time map"
            {:opts {:value opts, :type (type opts)}})))
 
-     (let [{:keys [ns coords level id msg data error] letf :let ; forms
+     (let [{:keys [ns coords level id msg data error log-fn] letf :let ; forms
             :or
             {ns     (str *ns*)
              level  :info
-             coords (utils/callsite-coords &form)}} opts
+             coords (utils/callsite-coords &form)
+             log-fn `*log-fn*}} opts
 
            lfn (gensym "lfn__")
-           kvs (not-empty (dissoc opts :ns :coords :level :id :error :let :msg :data))
+           kvs (not-empty (dissoc opts :ns :coords :level :id :error :let :msg :data :log-fn))
            lazy-form
            (when-let [opts (utils/assoc-some nil {:error error, :msg msg, :data data, :kvs kvs})]
              (if (every? utils/const? [opts letf])
                (if letf        `(let ~letf ~opts)           opts) ; Don't pay for wrapping
                (if letf `(delay (let ~letf ~opts)) `(delay ~opts))))]
 
-       `(let   [~lfn *log-fn*]
+       `(let   [~lfn ~log-fn]
           (when ~lfn
             (~lfn ~ns ~coords ~level ~id ~lazy-form))
           nil))))
