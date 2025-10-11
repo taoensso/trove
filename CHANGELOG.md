@@ -2,7 +2,7 @@ This project uses [**Break Versioning**](https://www.taoensso.com/break-versioni
 
 ---
 
-# `v1.0.1` (2025-10-11)
+# `v1.1.0` (2025-10-11)
 
 - **Dependency**: [on Clojars](https://clojars.org/com.taoensso/trove/versions/1.1.0)
 - **Versioning**: [Break Versioning](https://www.taoensso.com/break-versioning)

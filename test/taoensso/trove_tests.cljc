@@ -55,9 +55,10 @@
         (is (= (force  lazy_) {:msg "User: 1234", :data {:user-id 1234}, :kvs {:kv1 #{1234}}}))]))
 
    (testing ":log-fn option"
-     (=
-       (get (let [[args_ lfn] (capturing-log-fn)] (trove/log! {:msg "Hello!" :log-fn lfn}) @args_) 4)
-       {:msg "Hello!"}))])
+     (is
+       (=
+         (get (let [[args_ lfn] (capturing-log-fn)] (trove/log! {:msg "Hello!" :log-fn lfn}) @args_) 4)
+         {:msg "Hello!"})))])
 
 ;;;; Backends
 
