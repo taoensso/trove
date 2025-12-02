@@ -4,24 +4,22 @@
 (def ^:no-doc ^:const nl "System line separator"
   #?(:clj (System/getProperty "line.separator") :cljs "\n"))
 
-#?(:clj
-   (let [cons? (fn [x] (instance? clojure.lang.Cons x))]
-     (defn ^:no-doc const? [x]
-       (cond
-         (list? x) false
-         (cons? x) false
-         (map?  x) (every? const? (vals x))
-         (coll? x) (every? const?       x)
-         :else     true))))
+(let [cons? (fn [x] (instance? #?(:clj clojure.lang.Cons, :cljs cljs.core/Cons) x))]
+  (defn ^:no-doc const-form? [form]
+    (cond
+      (list? form) false
+      (cons? form) false
+      (map?  form) (every? const-form? (vals form))
+      (coll? form) (every? const-form?       form)
+      :else        true)))
 
-(comment (const? {:a :A :b :B :c [:d :e :f #_'(str "foo") 'g]}))
+(comment (const-form? {:a :A :b :B :c [:d :e :f #_'(str "foo") 'g]}))
 
-#?(:clj
-   (defn callsite-coords
-     "Returns [line column] from meta on given macro `&form`."
-     [macro-form]
-     (when-let [{:keys [line column]} (meta macro-form)]
-       (when line (if column [line column] [line])))))
+(defn callsite-coords
+  "Returns [line column] from meta on given macro `&form`."
+  [macro-form]
+  (when-let [{:keys [line column]} (meta macro-form)]
+    (when line (if column [line column] [line]))))
 
 (defn assoc-some
   "Assocs each kv to given ?map iff its value is not nil."
