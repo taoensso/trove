@@ -12,9 +12,10 @@
 
   :profiles
   {;; :default [:base :system :user :provided :dev]
-   :provided {:dependencies [[org.clojure/clojurescript "1.12.42"]
-                             [org.clojure/clojure       "1.12.1"]]}
-   :c1.12    {:dependencies [[org.clojure/clojure       "1.12.3"]]}
+   :provided {:dependencies [[org.clojure/clojurescript "1.12.145"]
+                             [org.clojure/clojure       "1.12.5"]]}
+   :c1.13    {:dependencies [[org.clojure/clojure       "1.13.0-alpha4"]]}
+   :c1.12    {:dependencies [[org.clojure/clojure       "1.12.5"]]}
    :c1.11    {:dependencies [[org.clojure/clojure       "1.11.4"]]}
    :c1.10    {:dependencies [[org.clojure/clojure       "1.10.3"]]}
 
@@ -25,7 +26,7 @@
     :uberjar-name "graal-tests.jar"
     :dependencies
     [[org.clojure/clojure                  "1.11.4"]
-     [com.github.clj-easy/graal-build-time "1.0.5"]]}
+     [com.github.clj-easy/graal-build-time "1.0.6"]]}
 
    :dev
    {:jvm-opts ["-server" "-Dtaoensso.elide-deprecated=true"]
@@ -35,18 +36,18 @@
      *unchecked-math*     false #_:warn-on-boxed}
 
     :dependencies
-    [[org.clojure/test.check    "1.1.1"]
-     [com.taoensso/encore       "3.155.0"]
-     [com.taoensso/telemere     "1.1.0"]
+    [[org.clojure/test.check    "1.1.3"]
+     [com.taoensso/encore       "3.169.1"]
+     [com.taoensso/telemere     "1.2.1"]
      [com.taoensso/timbre       "6.8.0"]
-     [com.brunobonacci/mulog    "0.9.0"]
-     [org.clojure/tools.logging "1.3.0"]
-     [org.slf4j/slf4j-api       "2.0.17"]
-     [org.slf4j/slf4j-simple    "2.0.17"]]
+     [com.brunobonacci/mulog    "0.10.1"]
+     [org.clojure/tools.logging "1.3.1"]
+     [org.slf4j/slf4j-api       "2.0.18"]
+     [org.slf4j/slf4j-simple    "2.0.18"]]
 
     :plugins
     [[lein-pprint    "1.3.2"]
-     [lein-ancient   "0.7.0"]
+     [lein-ancient   "1.0.0"]
      [lein-cljsbuild "1.1.8"]]}}
 
   :cljsbuild
@@ -70,6 +71,6 @@
    "build-once" ["do" ["clean"] ["cljsbuild" "once"]]
    "deploy-lib" ["do" ["build-once"] ["deploy" "clojars"] ["install"]]
 
-   "test-clj"   ["with-profile" "+c1.12:+c1.11:+c1.10" "test"]
+   "test-clj"   ["with-profile" "+c1.13:+c1.12:+c1.11:+c1.10" "test"]
    "test-cljs"  ["with-profile" "+c1.12" "cljsbuild"   "test"]
    "test-all"   ["do" ["clean"] ["test-clj"] ["test-cljs"]]})
