@@ -11,9 +11,9 @@
   Currently no options."
   ([] (get-log-fn nil))
   ([{:as _opts}]
-   (fn log-fn:timbre [ns coords level id lazy_]
+   (fn log-fn:timbre [ns coords level id payload_]
      (when (timbre/may-log? level ns)
-       (let [{:keys [msg data error #_kvs]}  (force lazy_)]
+       (let [{:keys [msg data error #_kvs]}  (force payload_)]
          (timbre/log!
            {:may-log? true
             :level    level

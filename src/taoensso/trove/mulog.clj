@@ -11,9 +11,9 @@
   Currently no options."
   ([] (get-log-fn nil))
   ([{:as _opts}]
-   (fn log-fn:mulog [ns coords level id lazy_]
+   (fn log-fn:mulog [ns coords level id payload_]
      ;; Mulog offers no way to filter here?
-     (let [{:keys [msg data error kvs]} (force lazy_)]
+     (let [{:keys [msg data error kvs]} (force payload_)]
        (ml/log* ml/*default-logger*
          (or id :trove/default)
          (utils/assoc-some nil

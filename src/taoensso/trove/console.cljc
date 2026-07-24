@@ -24,10 +24,10 @@
   ([{:keys [min-level]
      :or   {min-level #?(:clj :info, :cljs nil)}}]
 
-   (fn log-fn:console [ns coords level id lazy_]
+   (fn log-fn:console [ns coords level id payload_]
      (when #?(:clj true :cljs (exists? js/console))
        (when (or (not min-level) (>= (level->int level) (level->int min-level)))
-         (let [{:keys [msg data error #_kvs]} (force lazy_)
+         (let [{:keys [msg data error #_kvs]} (force payload_)
                combo-msg
                (str/join " "
                  (into [] (filter some?)

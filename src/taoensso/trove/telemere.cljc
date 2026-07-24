@@ -9,9 +9,9 @@
   Currently no options."
   ([] (get-log-fn nil))
   ([{:as _opts}]
-   (fn log-fn:telemere [ns coords level id lazy_]
+   (fn log-fn:telemere [ns coords level id payload_]
      (when (tel/signal-allowed? {:kind :trove, :ns ns, :level level, :id id})
-       (let [{:keys [msg data error kvs]} (force lazy_)]
+       (let [{:keys [msg data error kvs]} (force payload_)]
          (tel/signal!
            {:allow? true
             :ns     ns

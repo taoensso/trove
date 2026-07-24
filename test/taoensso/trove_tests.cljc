@@ -32,16 +32,16 @@
          ["ns" [12 34] :info nil {:data {:k1 :v1}, :kvs {:k2 :v2}}]))
 
    (testing "Auto delay wrapping"
-     [(let [lazy_ (get (with-backend (trove/log! {:msg "abc"})) 4)]
-        [(is (not (delay? lazy_)))
-         (is (=   (force  lazy_) {:msg "abc"}))])
+     [(let [payload_ (get (with-backend (trove/log! {:msg "abc"})) 4)]
+        [(is (not (delay? payload_)))
+         (is (=   (force  payload_) {:msg "abc"}))])
 
-      (let [lazy_ (get (with-backend (trove/log! {:msg (str "a" "b" "c")})) 4)]
-        [(is      (delay? lazy_))
-         (is (=   (force  lazy_) {:msg "abc"}))])])
+      (let [payload_ (get (with-backend (trove/log! {:msg (str "a" "b" "c")})) 4)]
+        [(is      (delay? payload_))
+         (is (=   (force  payload_) {:msg "abc"}))])])
 
    (testing ":let option"
-     (let [lazy_
+     (let [payload_
            (get
              (with-backend
                (trove/log!
@@ -51,8 +51,8 @@
                   :kv1              #{user-id}}))
              4)]
 
-       [(is    (delay? lazy_))
-        (is (= (force  lazy_) {:msg "User: 1234", :data {:user-id 1234}, :kvs {:kv1 #{1234}}}))]))
+       [(is    (delay? payload_))
+        (is (= (force  payload_) {:msg "User: 1234", :data {:user-id 1234}, :kvs {:kv1 #{1234}}}))]))
 
    (testing ":log-fn option"
      (is

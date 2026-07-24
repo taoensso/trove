@@ -74,7 +74,7 @@ Structured logging sometimes involves expensive data collection or transformatio
 
 That's why Trove automatically delays any values that need runtime evaluation, allowing the backend to apply filtering *before* paying realization costs.
 
-This explains the `:lazy_` `{:keys [msg data error kvs]}` arg given to [`truss/*log-fn*`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#*log-fn*).
+This explains the `payload_` `{:keys [msg data error kvs]}` arg given to [`truss/*log-fn*`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#*log-fn*).
 
 ## Why structured logging?
 

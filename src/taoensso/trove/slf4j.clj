@@ -18,7 +18,7 @@
   Currently no options."
   ([] (get-log-fn nil))
   ([{:as _opts}]
-   (fn log-fn:slf4j [ns coords level id lazy_]
+   (fn log-fn:slf4j [ns coords level id payload_]
      (let [logger (org.slf4j.LoggerFactory/getLogger (str ns))]
        (when-let [^org.slf4j.spi.LoggingEventBuilder builder
                   (case level
@@ -30,7 +30,7 @@
                     :report                                        (.atInfo  logger)
                     nil)]
 
-         (let [{:keys [msg data error #_kvs]} (force lazy_)]
+         (let [{:keys [msg data error #_kvs]} (force payload_)]
            (when ns     (.addKeyValue builder ":trove/ns"     (str ns)))
            (when id     (.addKeyValue builder ":trove/id"     (str id)))
            (when coords (.addKeyValue builder ":trove/coords" (str coords)))

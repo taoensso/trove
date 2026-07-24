@@ -13,10 +13,10 @@
   Currently no options."
   ([] (get-log-fn nil))
   ([{:as opts}]
-   (fn log-fn:tools-logging [ns coords level id lazy_]
+   (fn log-fn:tools-logging [ns coords level id payload_]
      (let [logger (impl/get-logger tl/*logger-factory* ns)]
        (when (impl/enabled? logger level)
-         (let [{:keys [msg data error #_kvs]} (force lazy_)]
+         (let [{:keys [msg data error #_kvs]} (force payload_)]
            (tl/log* logger level error
              (str/join " "
                (into [] (filter some?)

@@ -15,7 +15,7 @@
   i.e. what happens on `trove/log!` calls.
 
   When `nil`, all `trove/log!` calls will noop.
-  Otherwise value should be a (fn [ns coords level id lazy_]) with:
+  Otherwise value should be a (fn [ns coords level id payload_]) with:
 
     `ns` ------- String namespace  of   `log!` callsite, e.g. \"my-app.utils\"
     `coords` --- ?[line column]    of   `log!` callsite, may be lost (nil) for macros wrapping `log!`
@@ -23,7 +23,7 @@
     `level` ----  Keyword `:level` from `log!` call ∈ #{:trace :debug :info :warn :error :fatal :report}
     `id` ------- ?Keyword `:id`    from `log!` call, e.g. `:auth/login`, `::order-complete`, etc.
 
-    `lazy_` ---- {:keys [msg data error kvs]}, MAY be wrapped with `delay` so access with `force`:
+    `payload_` - {:keys [msg data error kvs]}, MAY be wrapped with `delay` so access with `force`:
       `:msg` --- ?String `:msg`        from `log!` call
       `:data` -- ?Map    `:data`       from `log!` call, e.g. {:user-id 1234}
       `:error` - ?Error  `:error`      from `log!` call, (`java.lang.Throwable`, `js/Error`, or nil)
@@ -66,7 +66,7 @@
     `:error` -- Optional platform error (`java.lang.Throwable`, `js/Error`)
 
   Advanced options:
-    `:let` ---- Bindings shared by lazy args: {:keys [msg data error kvs]}
+    `:let` ---- Bindings shared by payload args: {:keys [msg data error kvs]}
     `:ns` ----- Custom namespace string to override default
     `:coords` - Custom [line column]    to override default
     `:log-fn` - Custom `log-fn`         to override default (`*log-fn*`)
@@ -93,7 +93,7 @@
 
         lfn (gensym "lfn__")
         kvs (not-empty (dissoc opts :ns :coords :level :id :error :let :msg :data :log-fn))
-        lazy-form
+        payload-form
         (when-let [opts (utils/assoc-some nil {:error error, :msg msg, :data data, :kvs kvs})]
           (if (every? utils/const-form? [opts letf])
             (if letf        `(let ~letf ~opts)           opts) ; Don't pay for wrapping
@@ -101,7 +101,7 @@
 
     `(let   [~lfn ~log-fn]
        (when ~lfn
-         (~lfn ~ns ~coords ~level ~id ~lazy-form))
+         (~lfn ~ns ~coords ~level ~id ~payload-form))
        nil)))
 
 (comment
