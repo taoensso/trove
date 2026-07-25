@@ -43,7 +43,9 @@
      [com.brunobonacci/mulog    "0.10.1"]
      [org.clojure/tools.logging "1.3.1"]
      [org.slf4j/slf4j-api       "2.0.18"]
-     [org.slf4j/slf4j-simple    "2.0.18"]]
+     ;; Dev/test-only SLF4J provider with MDC support. Note 1.3.x is the
+     ;; last line to support Java 8, which we still test against.
+     [ch.qos.logback/logback-classic "1.3.16"]]
 
     :plugins
     [[lein-pprint    "1.3.2"]

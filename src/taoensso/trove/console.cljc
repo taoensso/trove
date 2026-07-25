@@ -17,8 +17,9 @@
     - Cljs: logs to JavaScript console.
 
   Options:
-    `:min-level` - ∈ #{nil :trace :debug :info :warn :error :fatal :report},
-                   log calls with a lower level will noop."
+
+  `:min-level` ∈ #{nil :trace :debug :info :warn :error :fatal :report}
+    Log calls with a lower level will noop."
 
   ([] (get-log-fn nil))
   ([{:keys [min-level]

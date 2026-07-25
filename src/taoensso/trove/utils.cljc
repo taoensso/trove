@@ -25,6 +25,27 @@
   ([m k v  ] (if-not (nil? v) (assoc m k v) m))
   ([m m-kvs] (reduce-kv assoc-some m m-kvs)))
 
+#?(:bb nil
+   :clj
+   (defn- reify-log-fn
+     "Returns a metadata-friendly wrapper for Trove's 5-arg `log-fn`.
+     JVM `with-meta` otherwise wraps fns in a slower generic `RestFn`.
+     Wrapper is 5-arity only, so throws `AbstractMethodError` (rather
+     than `ArityException`) if misused."
+     [^clojure.lang.IFn log-fn]
+     (reify
+       clojure.lang.Fn
+       clojure.lang.IFn
+       (applyTo [_ args] (.applyTo log-fn args))
+       (invoke  [_ ns coords level id payload_]
+         (log-fn   ns coords level id payload_)))))
+
+(defn ^:no-doc assoc-log-fn-meta [log-fn k v]
+  (let [m (assoc  (meta log-fn) k v)]
+    #?(:bb   (with-meta log-fn m)
+       :cljs (with-meta log-fn m)
+       :clj  (with-meta (reify-log-fn log-fn) m))))
+
 (defn format-id
   "`:foo.bar/baz` -> \"::baz\", etc."
   [ns x]

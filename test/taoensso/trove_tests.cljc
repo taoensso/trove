@@ -2,15 +2,23 @@
   (:require
    [clojure.string :as str]
    [clojure.test   :as test :refer [deftest testing is]]
+   [taoensso.timbre :as timbre]
    [taoensso.trove :as trove]
    [taoensso.trove.console :as trove-console]
-   [taoensso.trove.timbre]
+   [taoensso.trove.timbre :as trove-timbre]
    #?@
    (:bb []
     :clj
-    [[taoensso.telemere :as tel]
+    [[com.brunobonacci.mulog :as mulog]
+     [taoensso.telemere :as tel]
+     [taoensso.trove.mulog :as trove-mulog]
+     [taoensso.trove.slf4j :as trove-slf4j]
      [taoensso.trove.telemere :as trove-telemere]
-     [taoensso.trove.tools-logging]]))
+     [taoensso.trove.tools-logging]]
+
+    :cljs
+    [[taoensso.telemere :as tel]
+     [taoensso.trove.telemere :as trove-telemere]]))
 
   #?(:cljs
      (:require-macros
@@ -30,8 +38,8 @@
           ~@body @args_#))))
 
 (deftest basics
-  [(is (= (with-backend (trove/log! {}))         ["taoensso.trove-tests" [33 25] :info nil                      nil]))
-   (is (= (with-backend (trove/log! {:id ::id})) ["taoensso.trove-tests" [34 25] :info :taoensso.trove-tests/id nil]))
+  [(is (= (with-backend (trove/log! {}))         ["taoensso.trove-tests" [41 25] :info nil                      nil]))
+   (is (= (with-backend (trove/log! {:id ::id})) ["taoensso.trove-tests" [42 25] :info :taoensso.trove-tests/id nil]))
    (is (= (with-backend (trove/log! {:ns "ns", :coords [12 34], :data {:k1 :v1}, :k2 :v2}))
          ["ns" [12 34] :info nil {:data {:k1 :v1}, :kvs {:k2 :v2}}]))
 
@@ -161,6 +169,107 @@
         (is (= (force ctx+-payload_) {:ctx {:n 2}}) "Deferred update uses call-time ambient context")
         (is (= @calls_ [:ctx :ctx+]))]))])
 
+(deftest context-bridge
+  [(testing "No backend support"
+     (is
+       (= :body
+         (binding [trove/*log-fn* (fn [& _])]
+           (trove/with-ctx {:a 1}
+             (trove/with-ctx-bridge :body))))))
+
+   (testing "Generic backend support"
+     (let [events_ (atom [])
+           base-log-fn
+           (fn [ns coords level id payload_]
+             [ns coords level id payload_])
+
+           log-fn
+           (trove/add-ctx-bridge base-log-fn
+             (fn [ctx thunk]
+                (swap! events_ conj [:enter ctx])
+                (try
+                  (thunk)
+                  (finally (swap! events_ conj [:exit ctx])))))]
+
+       [(is (fn? log-fn))
+        (is (= (log-fn :ns :coords :level :id :payload)
+              [:ns :coords :level :id :payload]))
+        (is (= (apply log-fn [:ns :coords :level :id :payload])
+              [:ns :coords :level :id :payload]))
+        (is (= :body
+              (binding [trove/*log-fn* log-fn]
+                (trove/with-ctx-bridge :body))))
+
+        (is (= :body
+              (binding [trove/*log-fn* log-fn]
+                (trove/with-ctx {}
+                  (trove/with-ctx-bridge :body)))))
+
+        (is (empty? @events_))]
+
+       (is
+         (= :body
+           (binding [trove/*log-fn* log-fn]
+             (trove/with-ctx {:a 1}
+               (trove/with-ctx-bridge
+                 (swap! events_ conj [:body trove/*ctx*])
+                 :body)))))
+
+       (is
+         (= @events_
+           [[:enter {:a 1}]
+            [:body  {:a 1}]
+            [:exit  {:a 1}]]))))
+
+   #?(:bb nil
+      :default
+      (testing "Timbre context bridge"
+        (is
+          (=
+            (timbre/with-context+ {:native true, :shared :native}
+              (binding [trove/*log-fn* (trove-timbre/get-log-fn {:bridge-ctx? true})]
+                (trove/with-ctx {:trove true, :shared :trove}
+                  (trove/with-ctx-bridge timbre/*context*))))
+            {:native true, :trove true, :shared :trove}))))
+
+   #?(:bb nil
+      :default
+      (testing "Telemere context bridge"
+        (let [log-fn        (trove-telemere/get-log-fn {:bridge-ctx? true})
+
+              disabled-ctx
+              (tel/with-ctx {:native true}
+                (binding [trove/*log-fn* (trove-telemere/get-log-fn)]
+                  (trove/with-ctx {:trove true}
+                    (trove/with-ctx-bridge tel/*ctx*))))
+
+              forwarded-signal
+              (tel/with-signal true
+                (binding [trove/*log-fn* log-fn]
+                  (trove/with-ctx {:trove true}
+                    (trove/log! {:id ::trove-call}))))
+
+              unbridged-signal
+              (tel/with-signal true
+                (tel/with-ctx {:native true, :shared :native}
+                  (binding [trove/*log-fn* log-fn]
+                    (trove/with-ctx {:trove true, :shared :trove}
+                      (tel/log! {:id ::native-telemere-call})))))
+
+              bridged-signal
+              (tel/with-signal true
+                (tel/with-ctx {:native true, :shared :native}
+                  (binding [trove/*log-fn* log-fn]
+                    (trove/with-ctx {:trove true, :shared :trove}
+                      (trove/with-ctx-bridge
+                        (tel/log! {:id ::native-telemere-call}))))))]
+
+          [(is (= disabled-ctx {:native true}) "Backend must opt in")
+           (is (= (:ctx forwarded-signal) {:trove true}))
+           (is (= (:ctx unbridged-signal) {:native true, :shared :native}))
+           (is (= (:ctx   bridged-signal)
+                 {:native true, :trove true, :shared :trove}))])))])
+
 #?(:bb nil
    :clj
    (deftest context-backends
@@ -172,13 +281,98 @@
                 (trove/with-ctx {:a 1} (trove/log! {}))))
             "ctx: {:a 1}")))
 
-      (testing "Telemere"
-        (let [signal
-              (tel/with-signal true
-                (binding [trove/*log-fn* (trove-telemere/get-log-fn)]
-                  (trove/with-ctx {:a 1} (trove/log! {}))))]
+      (testing "μ/log context bridge"
+        (is
+          (=
+            (mulog/with-context {:native true, :shared :native}
+              (binding [trove/*log-fn* (trove-mulog/get-log-fn {:bridge-ctx? true})]
+                (trove/with-ctx {:trove true, :shared :trove}
+                  (trove/with-ctx-bridge (mulog/local-context)))))
+            {:native true, :trove true, :shared :trove})))
 
-          (is (= (:ctx signal) {:a 1}))))]))
+      (testing "SLF4J context"
+        (let [event_ (atom nil)
+              appender ; Note: Logback reads the MDC lazily, so capture on append
+              (doto
+                (proxy [ch.qos.logback.core.AppenderBase] []
+                  (append [ev]
+                    (let [^ch.qos.logback.classic.spi.ILoggingEvent ev ev]
+                      (reset! event_
+                        {:mdc (into {} (.getMDCPropertyMap ev))
+                         :kvs (into {}
+                                (map (fn [^org.slf4j.event.KeyValuePair kv]
+                                       [(.-key kv) (.-value kv)]))
+                                (.getKeyValuePairs ev))}))))
+                (.start))
+
+              ^ch.qos.logback.classic.Logger logger
+              (org.slf4j.LoggerFactory/getLogger "slf4j.test.ns")
+              additive? (.isAdditive logger)]
+
+          (doto logger
+            (.setAdditive false) ; Don't also print to console
+            (.addAppender appender))
+
+          (try
+            (binding [trove/*log-fn* (trove-slf4j/get-log-fn)]
+              (trove/with-ctx {:a 1}
+                (trove/log! {:ns "slf4j.test.ns", :msg "msg"})))
+
+            [(is (= (:mdc @event_) {"a" "1"}) "Context given to MDC")
+             (is (= (get (:kvs @event_) "a") "1")
+               "Context also kept as key-values, for providers without MDC support")]
+
+            (finally
+              (.detachAppender logger appender)
+              (.setAdditive   logger additive?)))))
+
+      (testing "SLF4J MDC context bridge"
+        (let [mdc (fn [] (into {} (org.slf4j.MDC/getCopyOfContextMap)))]
+          (try
+            (org.slf4j.MDC/put "native" "true")
+            (org.slf4j.MDC/put "shared" "native")
+            [(is
+               (=
+                 (binding [trove/*log-fn* (trove-slf4j/get-log-fn {:bridge-ctx? true})]
+                   (trove/with-ctx {:trove true, :shared :trove}
+                     (trove/with-ctx-bridge (mdc))))
+                 {"native" "true", "trove" "true", "shared" ":trove"}))
+
+             (is (= (mdc) {"native" "true", "shared" "native"}) "Restores previous MDC")
+
+             (is
+               (=
+                 (do
+                   (binding [trove/*log-fn* (trove-slf4j/get-log-fn {:bridge-ctx? true})]
+                     (trove/with-ctx {:trove true}
+                       (try (trove/with-ctx-bridge (throw (ex-info "Boom" {})))
+                            (catch Exception _ nil))))
+                   (mdc))
+                 {"native" "true", "shared" "native"})
+               "Restores previous MDC on exception")
+
+             (is
+               (=
+                 (do
+                   (binding [trove/*log-fn* (trove-slf4j/get-log-fn {:bridge-ctx? true})]
+                     (trove/with-ctx {:shared 1, "shared" 2} ; Both -> "shared"
+                       (trove/with-ctx-bridge nil)))
+                   (mdc))
+                 {"native" "true", "shared" "native"})
+               "Restores previous MDC given keys that normalize alike")
+
+             ;; Note: deliberately leaves "body" in the MDC, so keep last
+             (is
+               (=
+                 (do
+                   (binding [trove/*log-fn* (trove-slf4j/get-log-fn {:bridge-ctx? true})]
+                     (trove/with-ctx {:trove true}
+                       (trove/with-ctx-bridge (org.slf4j.MDC/put "body" "true"))))
+                   (mdc))
+                 {"native" "true", "shared" "native", "body" "true"})
+               "Retains MDC changes made by body")]
+
+            (finally (org.slf4j.MDC/clear)))))]))
 
 ;;;; Backends
 

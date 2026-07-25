@@ -107,6 +107,35 @@
     `(set!                *log-fn*           ~f)
     `(alter-var-root (var *log-fn*) (fn [_#] ~f))))
 
+(defn add-ctx-bridge
+  "For custom backend (log-fn) authors that wish to support `with-ctx-bridge`.
+  Returns given `log-fn` wrapped with appropriate metadata (retain this!).
+
+  Given `wrap-ctx-fn` should be a (fn [ctx thunk]) -> (with-native-ctx ctx (thunk)):
+    It will be called by `with-ctx-bridge` when `trove/*ctx*` is non-empty.
+    It should establish relevant native context, then execute and return (thunk)."
+
+  [log-fn wrap-ctx-fn]
+  (utils/assoc-log-fn-meta log-fn ::wrap-ctx-fn wrap-ctx-fn))
+
+(defn ^:no-doc call-with-ctx-bridge [ctx thunk]
+  (if (seq ctx)
+    (if-let [wrap-ctx-fn (get (meta *log-fn*) ::wrap-ctx-fn)]
+      (wrap-ctx-fn ctx thunk)
+      (thunk))
+    (thunk)))
+
+(defmacro with-ctx-bridge
+  "Evals given body and returns its result.
+
+  When `*log-fn*` opts in [1], merges Trove's `*ctx*` over backend's
+  own native context for the body's scope.
+
+  [1] See `:bridge-ctx?` opt for built-in log-fn constructors.
+      Custom backend authors see `add-ctx-bridge`."
+
+  [& body] `(call-with-ctx-bridge *ctx* (fn [] ~@body)))
+
 (defmacro log!
   "Logs the given info to the currently configured backend (see `*log-fn*`)
   and returns nil.

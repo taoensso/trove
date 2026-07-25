@@ -21,7 +21,7 @@ It supports:
 - **Richer filtering** capabilities (by namespace, id, level, data, etc.)
 - **Dynamic context** for correlating related logs, etc.
 
-It's TINY (0 deps, ~150 loc), fast, and highly flexible.
+It's TINY (0 deps, ~250 loc), fast, and highly flexible.
 
 ## To log
 
@@ -93,6 +93,50 @@ Utils:
 - [`set-root-ctx!`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#set-root-ctx!) to modify root (default) context
 
 `log!` also takes `:ctx` and `:ctx+` options to replace or update the context for a single call.
+
+### Bridging context to your backend (advanced)
+
+The above context belongs to Trove, so affects only `trove/log!` calls.
+
+Some backends have their own equivalent context. Bridging lets native (non-Trove) backend calls within designated scopes also see Trove's context.
+
+#### End-user config
+
+End users can opt in when configuring their chosen backend, e.g.:
+
+```clojure
+(ns my-ns
+  (:require
+   [taoensso.trove          :as trove]
+   [taoensso.trove.telemere :as trove-telemere]))
+
+(trove/set-log-fn!
+  (trove-telemere/get-log-fn
+    {:bridge-ctx? true})) ; <--- End user adds this
+```
+
+Context bridging is currently supported by the following backends:
+
+- Telemere
+- Timbre (except on Babashka)
+- μ/log
+- SLF4J (with an MDC-capable provider)
+
+#### Library authors
+
+Library authors mark relevant scopes using `with-ctx-bridge`:
+
+```clojure
+(trove/with-ctx+ {:workflow/step "fetch-page"}
+  (trove/with-ctx-bridge ; <--- Library author adds this
+    (fetch-page)))
+```
+
+See [`with-ctx-bridge`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#with-ctx-bridge) for more info.
+
+#### Custom backend authors
+
+Custom backends can add bridge support with [`trove/add-ctx-bridge`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#add-ctx-bridge).
 
 ## Why structured logging?
 
