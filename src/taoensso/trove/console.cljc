@@ -27,14 +27,15 @@
    (fn log-fn:console [ns coords level id payload_]
      (when #?(:clj true :cljs (exists? js/console))
        (when (or (not min-level) (>= (level->int level) (level->int min-level)))
-         (let [{:keys [msg data error #_kvs]} (force payload_)
+         (let [{:keys [ctx msg data error #_kvs]} (force payload_)
                combo-msg
                (str/join " "
                  (into [] (filter some?)
                    [(timestamp) level ns coords
                     (when id (utils/format-id ns id)) msg
-                    (when-not (empty? data) (str utils/nl "  data: " data))
-                    (when            error  (str utils/nl " error: " error))]))]
+                    (when (seq ctx)  (str utils/nl "   ctx: " ctx))
+                    (when (seq data) (str utils/nl "  data: " data))
+                    (when      error (str utils/nl " error: " error))]))]
 
            #?(:clj (do (print (str combo-msg utils/nl)) (flush)) ; Atomic println
               :cljs

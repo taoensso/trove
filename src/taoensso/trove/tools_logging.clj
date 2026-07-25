@@ -16,11 +16,12 @@
    (fn log-fn:tools-logging [ns coords level id payload_]
      (let [logger (impl/get-logger tl/*logger-factory* ns)]
        (when (impl/enabled? logger level)
-         (let [{:keys [msg data error #_kvs]} (force payload_)]
+         (let [{:keys [ctx msg data error #_kvs]} (force payload_)]
            (tl/log* logger level error
              (str/join " "
                (into [] (filter some?)
                  [(when id (utils/format-id ns id)) msg
-                  (when-not (empty? data) (str utils/nl " data: " data))])))))))))
+                  (when (seq ctx)  (str utils/nl "  ctx: " ctx))
+                  (when (seq data) (str utils/nl " data: " data))])))))))))
 
 (comment ((get-log-fn) (str *ns*) [1 2] :info ::id {:msg "line1\nline2" :data {:k :v}}))

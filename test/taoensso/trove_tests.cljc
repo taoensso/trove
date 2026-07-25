@@ -1,12 +1,16 @@
 (ns taoensso.trove-tests
   (:require
+   [clojure.string :as str]
    [clojure.test   :as test :refer [deftest testing is]]
    [taoensso.trove :as trove]
-   [taoensso.trove.console]
+   [taoensso.trove.console :as trove-console]
    [taoensso.trove.timbre]
    #?@
-   (:clj
-    [[taoensso.trove.tools-logging]]))
+   (:bb []
+    :clj
+    [[taoensso.telemere :as tel]
+     [taoensso.trove.telemere :as trove-telemere]
+     [taoensso.trove.tools-logging]]))
 
   #?(:cljs
      (:require-macros
@@ -26,8 +30,8 @@
           ~@body @args_#))))
 
 (deftest basics
-  [(is (= (with-backend (trove/log! {}))         ["taoensso.trove-tests" [29 25] :info nil                      nil]))
-   (is (= (with-backend (trove/log! {:id ::id})) ["taoensso.trove-tests" [30 25] :info :taoensso.trove-tests/id nil]))
+  [(is (= (with-backend (trove/log! {}))         ["taoensso.trove-tests" [33 25] :info nil                      nil]))
+   (is (= (with-backend (trove/log! {:id ::id})) ["taoensso.trove-tests" [34 25] :info :taoensso.trove-tests/id nil]))
    (is (= (with-backend (trove/log! {:ns "ns", :coords [12 34], :data {:k1 :v1}, :k2 :v2}))
          ["ns" [12 34] :info nil {:data {:k1 :v1}, :kvs {:k2 :v2}}]))
 
@@ -59,6 +63,122 @@
        (=
          (get (let [[args_ lfn] (capturing-log-fn)] (trove/log! {:msg "Hello!" :log-fn lfn}) @args_) 4)
          {:msg "Hello!"})))])
+
+(deftest context
+  [(is (= (trove/with-ctx {:ctx true} :body) :body))
+
+   (let [root-ctx trove/*ctx*]
+     (try
+       (trove/set-root-ctx! {:root true})
+       (is (= trove/*ctx*   {:root true}))
+       (finally (trove/set-root-ctx! root-ctx))))
+
+   (let [payload_
+         (get
+           (trove/with-ctx {:a 1}
+             (with-backend (trove/log! {:msg (str "m" "sg")})))
+           4)]
+
+     ;; Note `force` here happens *outside* the `with-ctx` scope
+     [(is (delay? payload_))
+      (is (= (force payload_) {:ctx {:a 1}, :msg "msg"})
+        "Ctx snapshot survives realization outside its scope")])
+
+   (is
+     (=
+       (->
+         (trove/with-ctx    {:a 1, :b 1}
+           (trove/with-ctx+ {:b 2, :c 2}
+             (with-backend (trove/log! {}))))
+         (get 4) force)
+       {:ctx {:a 1, :b 2, :c 2}}))
+
+   (is
+     (=
+       (->
+         (trove/with-ctx   {:scope :outer}
+           (trove/with-ctx {:scope :inner}
+             (with-backend (trove/log! {}))))
+         (get 4) force)
+       {:ctx {:scope :inner}}))
+
+   (is
+     (=
+       (->
+         (trove/with-ctx {:n 1}
+           (trove/with-ctx+ #(update % :n inc)
+             (with-backend (trove/log! {}))))
+         (get 4) force)
+       {:ctx {:n 2}}))
+
+   (testing "`log!` call opts"
+     (let [ctx-of (fn [args] (:ctx (force (get args 4))))]
+       [(is (=     (ctx-of (trove/with-ctx {:a 1} (with-backend (trove/log! {:ctx {:b 2}})))) {:b 2})              "`:ctx` replaces")
+        (is (=     (ctx-of (trove/with-ctx {:a 1} (with-backend (trove/log! {:ctx+ {:b 2}})))) {:a 1, :b 2})       "`:ctx+` merges map")
+        (is (=     (ctx-of (trove/with-ctx {:n 1} (with-backend (trove/log! {:ctx+ #(update % :n inc)})))) {:n 2}) "`:ctx+` applies fn")
+        (is (=     (ctx-of (trove/with-ctx {:a 1} (with-backend (trove/log! {:ctx nil})))) nil) "Explicit nil `:ctx` suppresses ambient context")
+        (is (= (force (get (trove/with-ctx {}     (with-backend (trove/log! {}))) 4)) nil)      "Empty context omitted")
+        (is (= (force (get (trove/with-ctx {}     (with-backend (trove/log! {:msg "msg"}))) 4)) {:msg "msg"})             "Empty context omitted from payload")
+        (is (=     (ctx-of (trove/with-ctx {:a 1} (with-backend (trove/log! {:ctx {:b 2}, :ctx+ {:c 3}})))) {:a 1, :c 3}) "As Telemere, `:ctx+` trumps `:ctx`")
+        (is (= (force (get (trove/with-ctx {:a 1} (with-backend (trove/log! {:ctx {:b 2}, :msg "msg"}))) 4)) {:ctx {:b 2}, :msg "msg"}) "Not treated as kvs")]))
+
+   (testing "`:let` bindings are shared by context and payload args"
+     [(is
+        (=
+          (force (get (with-backend (trove/log! {:let [uid 1234], :ctx {:user-id uid}, :msg (str "User: " uid)})) 4))
+          {:ctx {:user-id 1234}, :msg "User: 1234"}))
+
+      (is
+        (=
+          (force
+            (get
+              (trove/with-ctx {:a 1}
+                (with-backend (trove/log! {:let [uid 1234], :ctx+ {:user-id uid}})))
+              4))
+          {:ctx {:a 1, :user-id 1234}}))
+
+      (let [calls_ (atom 0)
+            payload_
+            (get (with-backend (trove/log! {:let [uid (do (swap! calls_ inc) 1234)], :ctx {:user-id uid}})) 4)]
+
+        [(is (delay? payload_)      "Delayed when only `:ctx` uses a runtime `:let` binding")
+         (is (= @calls_ 0)          "Runtime `:let` binding not evaluated before realization")
+         (is (= (force payload_) {:ctx {:user-id 1234}}))
+         (is (= @calls_ 1))])])
+
+   (testing "Runtime call context is payload-lazy"
+     (let [calls_       (atom [])
+           ctx-payload_ (get (with-backend (trove/log! {:ctx (do (swap! calls_ conj :ctx) {:a 1})})) 4)
+           ctx+-payload_
+           (get
+             (trove/with-ctx {:n 1}
+               (with-backend
+                 (trove/log! {:ctx+ (fn [ctx] (swap! calls_ conj :ctx+) (update ctx :n inc))})))
+             4)]
+
+       [(is (= @calls_ []))
+        (is (= (force ctx-payload_)  {:ctx {:a 1}}))
+        (is (= (force ctx+-payload_) {:ctx {:n 2}}) "Deferred update uses call-time ambient context")
+        (is (= @calls_ [:ctx :ctx+]))]))])
+
+#?(:bb nil
+   :clj
+   (deftest context-backends
+     [(testing "Console"
+        (is
+          (str/includes?
+            (with-out-str
+              (binding [trove/*log-fn* (trove-console/get-log-fn)]
+                (trove/with-ctx {:a 1} (trove/log! {}))))
+            "ctx: {:a 1}")))
+
+      (testing "Telemere"
+        (let [signal
+              (tel/with-signal true
+                (binding [trove/*log-fn* (trove-telemere/get-log-fn)]
+                  (trove/with-ctx {:a 1} (trove/log! {}))))]
+
+          (is (= (:ctx signal) {:a 1}))))]))
 
 ;;;; Backends
 

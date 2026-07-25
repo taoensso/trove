@@ -30,13 +30,14 @@
                     :report                                        (.atInfo  logger)
                     nil)]
 
-         (let [{:keys [msg data error #_kvs]} (force payload_)]
+         (let [{:keys [ctx msg data error #_kvs]} (force payload_)]
            (when ns     (.addKeyValue builder ":trove/ns"     (str ns)))
            (when id     (.addKeyValue builder ":trove/id"     (str id)))
            (when coords (.addKeyValue builder ":trove/coords" (str coords)))
            (when msg    (.setMessage  builder                 (str msg)))
            (when error  (.setCause    builder ^Throwable      error))
 
+           (when ctx    (reduce-kv (fn [_ k v] (.addKeyValue builder (str k) (str v))) nil ctx))
            #_(when kvs  (reduce-kv (fn [_ k v] (.addKeyValue builder (str k) (str v))) nil kvs))
            (when data   (reduce-kv (fn [_ k v] (.addKeyValue builder (str k) (str v))) nil data))
            (do                                 (.log         builder))))))))

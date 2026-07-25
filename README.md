@@ -19,8 +19,9 @@ It supports:
 - Both traditional **and structured** logging
 - Both Clojure **and ClojureScript**
 - **Richer filtering** capabilities (by namespace, id, level, data, etc.)
+- **Dynamic context** for correlating related logs, etc.
 
-It's TINY (1 macro, 0 deps, ~100 loc), fast, and highly flexible.
+It's TINY (0 deps, ~150 loc), fast, and highly flexible.
 
 ## To log
 
@@ -35,12 +36,12 @@ Trove uses the same map-based logging API as [Telemere](https://www.taoensso.com
 (trove/log! {:level :info, :id :auth/login, :data {:user-id 1234}, :msg "User logged in!"})
 ```
 
-The above logging call expands to:
+The above logging call expands to roughly:
 
 ```clojure
 (when-let [log-fn trove/*log-fn*] ; Chosen backend fn
-  (log-fn ... "my-ns" :info :auth/login [line-num column-num]
-    {:msg "User logged in!", :data {:user-id 1234}} ...))
+  (log-fn "my-ns" [line column] :info :auth/login ; Callsite info
+    {:msg "User logged in!", :data {:user-id 1234}})) ; Payload
 ```
 
 And the chosen backend then takes care of filtering and output.
@@ -72,9 +73,26 @@ Structured logging sometimes involves expensive data collection or transformatio
 (trove/log! {:id ::my-event, :data (expensive) ...})
 ```
 
-That's why Trove automatically delays any values that need runtime evaluation, allowing the backend to apply filtering *before* paying realization costs.
+That's why Trove automatically delays payload values that need runtime evaluation, allowing the backend to apply filtering *before* paying realization costs. See [`*log-fn*`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#*log-fn*) for payload details.
 
-This explains the `payload_` `{:keys [msg data error kvs]}` arg given to [`truss/*log-fn*`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#*log-fn*).
+## Dynamic context
+
+An optional context map ([`*ctx*`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#*ctx*)) may be attached to `trove/log!`.
+
+```clojure
+(trove/with-ctx+ {:workflow/step "fetch-page"}
+  (trove/log! {:id :ingest/fetched, :data {:n 42}}))
+```
+
+In this case `:ctx` will be included in the payload given to your backend.
+
+Utils:
+
+- [`with-ctx`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#with-ctx) to replace the current context
+- [`with-ctx+`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#with-ctx+) to update the current context
+- [`set-root-ctx!`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#set-root-ctx!) to modify root (default) context
+
+`log!` also takes `:ctx` and `:ctx+` options to replace or update the context for a single call.
 
 ## Why structured logging?
 

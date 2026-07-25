@@ -11,7 +11,7 @@
   ([{:as _opts}]
    (fn log-fn:telemere [ns coords level id payload_]
      (when (tel/signal-allowed? {:kind :trove, :ns ns, :level level, :id id})
-       (let [{:keys [msg data error kvs]} (force payload_)]
+       (let [{:keys [ctx msg data error kvs]} (force payload_)]
          (tel/signal!
            {:allow? true
             :ns     ns
@@ -19,6 +19,7 @@
             :kind   :trove
             :id     id
             :level  level
+            :ctx+   ctx
             :data   data
             :msg    msg
             :error  error
