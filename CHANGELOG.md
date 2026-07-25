@@ -2,6 +2,27 @@ This project uses [**Break Versioning**](https://www.taoensso.com/break-versioni
 
 ---
 
+# `v1.2.0` (2026-07-26)
+
+- **Dependency**: [on Clojars](https://clojars.org/com.taoensso/trove/versions/1.2.0)
+- **Versioning**: [Break Versioning](https://www.taoensso.com/break-versioning)
+
+This is a significant feature release. Main highlight is a new **dynamic context** API for correlating related logs, etc.
+
+Includes one **breaking change** affecting only users of the (alpha) SLF4J backend that read Trove's emitted key-values by exact name - see \[fe9e2a3] for details and remediation.
+
+##  Since v1.1.0 (2025-10-11)
+
+- \[mod] SLF4J: rename emitted key-values \[fe9e2a3]
+- \[new] [#7] Add dynamic context API \[16d9c25]
+- \[new] [#7] Add opt-in backend context bridge \[31abb45]
+- \[new] Add support for Scittle \[f943dff]
+- \[new] Add `deps.edn` to support tools.deps git deps \[43e9ab9]
+- \[new] Rename `lazy_` -> `payload_` (non-breaking) \[4657da3]
+- \[fix] `const-form?`: check also map keys \[680c20f]
+
+---
+
 # `v1.1.0` (2025-10-11)
 
 - **Dependency**: [on Clojars](https://clojars.org/com.taoensso/trove/versions/1.1.0)
