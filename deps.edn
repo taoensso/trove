@@ -1,0 +1,12 @@
+;; Minimal manifest so that tools.deps can consume Trove directly from git, e.g.:
+;;
+;;   {:deps {com.taoensso/trove {:git/url "https://github.com/taoensso/trove"
+;;                               :git/sha "..."}}}
+;;
+;; Without this, such deps fail with "Manifest file not found" since our
+;; generated `pom.xml` is gitignored.
+;;
+;; Trove has zero runtime dependencies, so there's nothing to keep in sync here.
+;; See `project.clj` for dev/test config, which remains the source of truth.
+
+{:paths ["src"]}
