@@ -1,4 +1,9 @@
-{:paths ["bb"]
+;; Our Timbre backend needs `timbre/may-log?`, which bb first exposed in
+;; 1.12.204 <https://github.com/babashka/babashka/issues/1834>. Declare it so
+;; older bb gives a clear message instead of "Could not resolve symbol".
+{:min-bb-version "1.12.204"
+
+ :paths ["bb"]
  :tasks
  {test:bb-trove
   {:doc "Run standard Trove tests with babashka"
