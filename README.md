@@ -10,48 +10,29 @@
 
 ### Modern logging facade for Clojure/Script
 
-Trove is a minimal, modern alternative to [tools.logging](https://github.com/clojure/tools.logging).
+Trove is a minimal, modern alternative to [tools.logging](https://github.com/clojure/tools.logging) that supports:
 
-It's intended for **library authors** that want to emit rich logging _without_ forcing their users to adopt any particular backend (e.g. [Telemere](https://www.taoensso.com/telemere), [Timbre](https://www.taoensso.com/timbre), [μ/log](https://github.com/BrunoBonacci/mulog), [tools.logging](https://github.com/clojure/tools.logging), [SLF4J](https://www.slf4j.org/), etc.).
-
-It supports:
-
-- Both traditional **and structured** logging
-- Both Clojure **and ClojureScript**
-- **Richer filtering** capabilities (by namespace, id, level, data, etc.)
+- Both traditional **and structured** logging.
+- Both Clojure **and ClojureScript**.
+- **Richer filtering** capabilities (by namespace, id, level, data, etc.).
 - **Dynamic context** for correlating related logs, etc.
 
-It's TINY (0 deps, ~250 loc), fast, and highly flexible.
+It's intended mostly for **library authors** that want to emit rich logging _without_ forcing their users to adopt any particular backend ([Telemere](https://www.taoensso.com/telemere), [Timbre](https://www.taoensso.com/timbre), [μ/log](https://github.com/BrunoBonacci/mulog), [tools.logging](https://github.com/clojure/tools.logging), [SLF4J](https://www.slf4j.org/), etc.).
 
-## To log
+Trove is tiny (0 deps, ~250 loc), fast, and highly flexible.
 
-Trove uses the same map-based logging API as [Telemere](https://www.taoensso.com/telemere).
+## Why structured logging?
 
-1. Include the (tiny) [dependency](../../releases/) in your project or library.
-2. Use `trove/log!` to make your logging calls (see its [docstring](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#log!) for options):
+- Traditional logging outputs **strings** (messages).
+- Structured logging in contrast outputs **data**. It retains **rich data types and (nested) structures** throughout the logging pipeline from logging callsite → filters → middleware → handlers.
 
-```clojure
-(ns my-ns (:require [taoensso.trove :as trove]))
+A data-oriented pipeline allows **easier filtering**, **transformation**, and **analysis**. It's also often **faster** since it helps avoid unnecessary serialization, and  is well suited to the tools and idioms offered by Clojure and ClojureScript.
 
-(trove/log! {:level :info, :id :auth/login, :data {:user-id 1234}, :msg "User logged in!"})
-```
+## Usage for end users
 
-The above logging call expands to roughly:
+Trove just **works out the box**: if a library you use depends on Trove, you'll automatically get sensible library logging to `*out*` or the JS console. No need for any config, or even a logging library.
 
-```clojure
-(when-let [log-fn trove/*log-fn*] ; Chosen backend fn
-  (log-fn "my-ns" [line column] :info :auth/login ; Callsite info
-    {:msg "User logged in!", :data {:user-id 1234}})) ; Payload
-```
-
-And the chosen backend then takes care of filtering and output.
-
-## To choose a backend
-
-Just set `trove/*log-fn*` to an appropriate fn (see its [docstring](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#*log-fn*) for fn args).
-
-The default fn prints logs to `*out*` or the JS console.  
-Alt fns are also available for some common backends, e.g.:
+But you may prefer to configure Trove to instead direct logs to your **preferred backend** by calling [`trove/set-log-fn!`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#set-log-fn!):
 
 ```clojure
 (ns my-ns
@@ -59,13 +40,37 @@ Alt fns are also available for some common backends, e.g.:
    [taoensso.trove.x] ; x ∈ #{console telemere timbre mulog tools-logging slf4j} (default console)
    [taoensso.trove :as trove]))
 
-(trove/set-log-fn! (taoensso.trove.x/get-log-fn))
+(trove/set-log-fn! (taoensso.trove.x/get-log-fn {:bridge-ctx? true/false}))
 (trove/set-log-fn! nil) ; To noop all `trove/log!` calls
 ```
 
-It's easy to write your own log-fn if you want to use a different backend or customise anything.
+> Use `{:bridge-ctx? true}` if you'd like to allow library authors to update your backend's native context when relevant. Requires Telemere, Timbre (except on Babashka), μ/log, or SLF4J with an MDC-capable provider.
 
-## What about expensive data?
+You can also easily **write your own log-fn** - see [`trove/*log-fn*`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#*log-fn*) for details.
+
+## Usage for library authors
+
+### Logging
+
+[Include](../../releases/) Trove in your library deps, then use [`trove/log!`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#log!) to make your logging calls:
+
+```clojure
+(ns my-ns (:require [taoensso.trove :as trove]))
+
+(trove/log! {:level :info, :id :auth/login, :data {:user-id 1234}, :msg "User logged in!"})
+```
+
+Trove uses the same map-based logging API as [Telemere](https://www.taoensso.com/telemere). The above expands to roughly:
+
+```clojure
+(when-let [log-fn trove/*log-fn*] ; Chosen backend fn
+  (log-fn "my-ns" [line column] :info :auth/login ; Callsite info
+    {:msg "User logged in!", :data {:user-id 1234}})) ; Payload
+```
+
+The end user's chosen backend takes care of filtering and output.
+
+#### What about expensive data?
 
 Structured logging sometimes involves expensive data collection or transformation, e.g.:
 
@@ -75,77 +80,36 @@ Structured logging sometimes involves expensive data collection or transformatio
 
 That's why Trove automatically delays payload values that need runtime evaluation, allowing the backend to apply filtering *before* paying realization costs. See [`*log-fn*`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#*log-fn*) for payload details.
 
-## Dynamic context
+### Dynamic context
 
-An optional context map ([`*ctx*`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#*ctx*)) may be attached to `trove/log!`.
+The [`trove/*ctx*`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#*ctx*) context map may be attached to `trove/log!` output:
 
 ```clojure
 (trove/with-ctx+ {:workflow/step "fetch-page"}
   (trove/log! {:id :ingest/fetched, :data {:n 42}}))
 ```
 
-In this case `:ctx` will be included in the payload given to your backend.
-
 Utils:
 
+- [`set-root-ctx!`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#set-root-ctx!) to modify root (default) context
 - [`with-ctx`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#with-ctx) to replace the current context
 - [`with-ctx+`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#with-ctx+) to update the current context
-- [`set-root-ctx!`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#set-root-ctx!) to modify root (default) context
 
-`log!` also takes `:ctx` and `:ctx+` options to replace or update the context for a single call.
+> `log!` also takes `:ctx` and `:ctx+` options to replace or update the context for a single call.
 
-### Bridging context to your backend (advanced)
+#### Bridging context to the backend (advanced)
 
 The above context belongs to Trove, so affects only `trove/log!` calls.
 
-Some backends have their own equivalent context. Bridging lets native (non-Trove) backend calls within designated scopes also see Trove's context.
-
-#### End-user config
-
-End users can opt in when configuring their chosen backend, e.g.:
-
-```clojure
-(ns my-ns
-  (:require
-   [taoensso.trove          :as trove]
-   [taoensso.trove.telemere :as trove-telemere]))
-
-(trove/set-log-fn!
-  (trove-telemere/get-log-fn
-    {:bridge-ctx? true})) ; <--- End user adds this
-```
-
-Context bridging is currently supported by the following backends:
-
-- Telemere
-- Timbre (except on Babashka)
-- μ/log
-- SLF4J (with an MDC-capable provider)
-
-#### Library authors
-
-Library authors mark relevant scopes using `with-ctx-bridge`:
+Some backends have their own equivalent context, which you [can also update](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#with-ctx-bridge) for end-users that choose to opt-in:
 
 ```clojure
 (trove/with-ctx+ {:workflow/step "fetch-page"}
-  (trove/with-ctx-bridge ; <--- Library author adds this
+  (trove/with-ctx-bridge ; Merge Trove context into native backend context
     (fetch-page)))
 ```
 
-See [`with-ctx-bridge`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#with-ctx-bridge) for more info.
-
-#### Custom backend authors
-
 Custom backends can add bridge support with [`trove/add-ctx-bridge`](https://cljdoc.org/d/com.taoensso/trove/CURRENT/api/taoensso.trove#add-ctx-bridge).
-
-## Why structured logging?
-
-- Traditional logging outputs **strings** (messages).
-- Structured logging in contrast outputs **data**. It retains **rich data types and (nested) structures** throughout the logging pipeline from logging callsite → filters → middleware → handlers.
-
-A data-oriented pipeline can make a huge difference - supporting **easier filtering**, **transformation**, and **analysis**. It’s also usually **faster**, since you only pay for serialization if/when you need it. In a lot of cases you can avoid serialization altogether if your final target (DB, etc.) supports the relevant types.
-
-The structured (data-oriented) approach is inherently more flexible, faster, and well suited to the tools and idioms offered by Clojure and ClojureScript.
 
 ## Funding
 
@@ -153,7 +117,7 @@ You can [help support][sponsor] continued work on this project and [others][my w
 
 ## License
 
-Copyright &copy; 2025 [Peter Taoussanis][].  
+Copyright &copy; 2026 [Peter Taoussanis][].  
 Licensed under [EPL 1.0](LICENSE.txt) (same as Clojure).
 
 <!-- Common -->
