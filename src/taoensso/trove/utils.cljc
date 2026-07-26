@@ -9,8 +9,7 @@
     (cond
       (list? form) false
       (cons? form) false
-      (map?  form) (every? const-form? (vals form))
-      (coll? form) (every? const-form?       form)
+      (coll? form) (every? const-form? form)
       :else        true)))
 
 (comment (const-form? {:a :A :b :B :c [:d :e :f #_'(str "foo") 'g]}))
