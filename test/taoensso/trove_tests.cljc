@@ -316,11 +316,15 @@
           (try
             (binding [trove/*log-fn* (trove-slf4j/get-log-fn)]
               (trove/with-ctx {:a 1}
-                (trove/log! {:ns "slf4j.test.ns", :msg "msg"})))
+                (trove/log! {:ns "slf4j.test.ns", :msg "msg", :data {:a 2}})))
 
-            [(is (= (:mdc @event_) {"a" "1"}) "Context given to MDC")
-             (is (= (get (:kvs @event_) "a") "1")
-               "Context also kept as key-values, for providers without MDC support")]
+            [(is (= (:mdc @event_) {"a" "1"}) "Context given to MDC, unprefixed")
+             (is (= (get (:kvs @event_) "ctx.a") "1")
+               "Context also kept as key-values, for providers without MDC support")
+             (is (= (get (:kvs @event_) "data.a") "2")
+               "Data key-values are prefixed, so don't collide with context")
+             (is (= (get (:kvs @event_) "trove/ns") "slf4j.test.ns")
+               "Trove's own key-values drop Clojure's leading colon")]
 
             (finally
               (.detachAppender logger appender)

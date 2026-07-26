@@ -6,7 +6,7 @@
    [taoensso.trove.utils :as utils]))
 
 (defn- qname
-  "`:foo.bar/baz` -> \"foo.bar/baz\", etc. Used for context keys, which share
+  "`:foo.bar/baz` -> \"foo.bar/baz\", etc. Used for all key names, which share
   a namespace with the app's own, so shouldn't carry Clojure's leading colon."
   ^String [x]
   (if (keyword? x)
@@ -14,6 +14,12 @@
       (str ns "/" (name x))
       (do         (name x)))
     (str x)))
+
+(defn- pname
+  "\"data\", `:foo.bar/baz` -> \"data.foo.bar/baz\", etc. Prefix identifies the
+  source map so that e.g. context and data keys of the same name don't collide
+  as duplicate key-values. As Telemere's OpenTelemetry handler."
+  ^String [prefix x] (str prefix "." (qname x)))
 
 (defn- put-mdc!
   "Merges given non-empty map into SLF4J's MDC. Returns ?map of the previous
@@ -59,6 +65,11 @@
   Context is provided as key-values, and through SLF4J's MDC so that
   it's also visible to MDC-aware layouts (`%X{my-key}`) encoders, etc.
 
+  Key-value names drop Clojure's leading colon, and carry a prefix
+  identifying their source map: `:user-id` in `:data` -> \"data.user-id\",
+  in context -> \"ctx.user-id\". MDC names are unprefixed (\"user-id\") so
+  that layouts stay legible.
+
   Options:
 
   `:bridge-ctx?` (default false)
@@ -81,15 +92,15 @@
                           nil)]
 
                (let [{:keys [ctx msg data error #_kvs]} (force payload_)]
-                 (when ns     (.addKeyValue builder ":trove/ns"     (str ns)))
-                 (when id     (.addKeyValue builder ":trove/id"     (str id)))
-                 (when coords (.addKeyValue builder ":trove/coords" (str coords)))
-                 (when msg    (.setMessage  builder                 (str msg)))
-                 (when error  (.setCause    builder ^Throwable      error))
+                 (when ns     (.addKeyValue builder "trove/ns"     (str ns)))
+                 (when id     (.addKeyValue builder "trove/id"     (str id)))
+                 (when coords (.addKeyValue builder "trove/coords" (str coords)))
+                 (when msg    (.setMessage  builder                (str msg)))
+                 (when error  (.setCause    builder ^Throwable     error))
 
-                 #_(when kvs  (reduce-kv (fn [_ k v] (.addKeyValue builder (str   k) (str v))) nil kvs))
-                 (when   data (reduce-kv (fn [_ k v] (.addKeyValue builder (str   k) (str v))) nil data))
-                 (when   ctx  (reduce-kv (fn [_ k v] (.addKeyValue builder (qname k) (str v))) nil ctx))
+                 #_(when kvs  (reduce-kv (fn [_ k v] (.addKeyValue builder (pname "kvs"  k) (str v))) nil kvs))
+                 (when   data (reduce-kv (fn [_ k v] (.addKeyValue builder (pname "data" k) (str v))) nil data))
+                 (when   ctx  (reduce-kv (fn [_ k v] (.addKeyValue builder (pname "ctx"  k) (str v))) nil ctx))
 
                  (if (empty? ctx) ; Also give ctx to MDC-aware layouts, etc.
                    (do           (.log builder))
